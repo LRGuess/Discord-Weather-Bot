@@ -1,0 +1,304 @@
+import discord
+from discord.ext import commands, tasks
+import requests
+import datetime
+
+# Replace 'YOUR_DISCORD_TOKEN' and 'YOUR_OPENWEATHERMAP_API_KEY' with your actual tokens
+DISCORD_TOKEN = 'MTE3NDUwMzMxNDc1OTYyMjczNg.GhZ0Uv.kyIo60OicvRRXEwpxYwmEgD5YGs1UGsFdLWxTE'
+OPENWEATHERMAP_API_KEY = 'c9f567f144498e9eef17914f88af8e57'
+
+# Create an instance of the bot
+bot = commands.Bot(command_prefix='!')
+
+# Dictionary to store user default locations (user_id: location)
+default_locations = {}
+
+# Dictionary to store user default temperature units (user_id: unit)
+default_units = {}
+
+# Dictionary to store user daily update times (user_id: time)
+daily_update_times = {}
+
+# Command to get the weather
+@bot.command(name='weather', help='Get the current weather for a location')
+async def get_weather(ctx, *, location=None):
+    if location is None:
+        # Check if user has a default location
+        if ctx.author.id in default_locations:
+            location = default_locations[ctx.author.id]
+        else:
+            await ctx.send("Please provide a location or set a default location using !setlocation.")
+            return
+
+    # Call OpenWeatherMap API
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Extract relevant weather information
+        main_weather = weather_data['weather'][0]['main']
+        description = weather_data['weather'][0]['description']
+        temperature = weather_data['main']['temp']
+
+        # Convert temperature to the user's preferred unit
+        if ctx.author.id in default_units and default_units[ctx.author.id] == 'F':
+            temperature = (temperature * 9/5) + 32
+
+        # Send the weather information to the Discord channel
+        await ctx.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}.')
+    else:
+        await ctx.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
+
+# Command to set a default location
+@bot.command(name='setlocation', help='Set a default location for weather updates')
+async def set_location(ctx, *, location):
+    default_locations[ctx.author.id] = location
+    await ctx.send(f'Default location set to {location}.')
+
+# Command to set a default temperature unit
+@bot.command(name='setunit', help='Set a default temperature unit (C or F)')
+async def set_unit(ctx, unit):
+    unit = unit.upper()
+    if unit == 'C' or unit == 'F':
+        default_units[ctx.author.id] = unit
+        await ctx.send(f'Default temperature unit set to {unit}.')
+    else:
+        await ctx.send('Invalid unit. Please use C or F.')
+
+# Command to set a daily update time
+@bot.command(name='dailyupdate', help='Set a specific time for daily weather updates')
+async def set_daily_update(ctx, time):
+    try:
+        # Parse the time string and convert it to a datetime.time object
+        update_time = datetime.datetime.strptime(time, '%H:%M').time()
+
+        # Store the user's daily update time
+        daily_update_times[ctx.author.id] = update_time
+
+        await ctx.send(f'Daily weather update time set to {time}.')
+    except ValueError:
+        await ctx.send('Invalid time format. Please use HH:MM.')
+
+# Command to get the wind information
+@bot.command(name='wind', help='Get the wind information for a location')
+async def get_wind(ctx, *, location=None):
+    if location is None:
+        # Check if user has a default location
+        if ctx.author.id in default_locations:
+            location = default_locations[ctx.author.id]
+        else:
+            await ctx.send("Please provide a location or set a default location using !setlocation.")
+            return
+
+    # Call OpenWeatherMap API
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Extract wind information
+        wind_speed = weather_data['wind']['speed']
+        wind_direction = weather_data['wind']['deg']
+
+        # Send the wind information to the Discord channel
+        await ctx.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+    else:
+        await ctx.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
+
+# Command to get the humidity information
+@bot.command(name='humidity', help='Get the humidity information for a location')
+async def get_humidity(ctx, *, location=None):
+    if location is None:
+        # Check if user has a default location
+        if ctx.author.id in default_locations:
+            location = default_locations[ctx.author.id]
+        else:
+            await ctx.send("Please provide a location or set a default location using !setlocation.")
+            return
+
+    # Call OpenWeatherMap API
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Extract humidity information
+        humidity = weather_data['main']['humidity']
+
+        # Send the humidity information to the Discord channel
+        await ctx.send(f'The humidity in {location} is {humidity}%.')
+    else:
+        await ctx.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
+
+# Command to get the weather forecast
+@bot.command(name='forecast', help='Get the weather forecast for a location')
+async def get_forecast(ctx, *, location=None):
+    if location is None:
+        # Check if user has a default location
+        if ctx.author.id in default_locations:
+            location = default_locations[ctx.author.id]
+        else:
+            await ctx.send("Please provide a location or set a default location using !setlocation.")
+            return
+
+    # Call OpenWeatherMap One Call API
+    forecast_api_url = f'https://api.openweathermap.org/data/2.5/onecall?lat=0&lon=0&exclude=current,minutely,hourly,alerts&appid={OPENWEATHERMAP_API_KEY}&q={location}'
+    response = requests.get(forecast_api_url)
+    forecast_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Extract the daily forecast
+        daily_forecast = forecast_data['daily']
+
+        # Display the forecast for the next few days
+        forecast_message = f'Weather forecast for {location}:\n'
+        for day in daily_forecast:
+            date = day['dt']
+            temperature_min = day['temp']['min']
+            temperature_max = day['temp']['max']
+            description = day['weather'][0]['description']
+
+            # Convert temperature to the user's preferred unit
+            if ctx.author.id in default_units and default_units[ctx.author.id] == 'F':
+                temperature_min = (temperature_min * 9/5) + 32
+                temperature_max = (temperature_max * 9/5) + 32
+
+            forecast_message += f'{date}: Min Temp: {temperature_min:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}, Max Temp: {temperature_max:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}, Weather: {description}\n'
+
+        # Send the forecast information to the Discord channel
+        await ctx.send(forecast_message)
+    else:
+        await ctx.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
+
+# Task to send daily weather updates
+@tasks.loop(hours=24)
+async def send_daily_updates():
+    current_time = datetime.datetime.now().time()
+
+    for user_id, update_time in daily_update_times.items():
+        if current_time.hour == update_time.hour and current_time.minute == update_time.minute:
+            # Get the user's default location
+            location = default_locations.get(user_id)
+
+            if location:
+                # Call OpenWeatherMap API
+                weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+                response = requests.get(weather_api_url)
+                weather_data = response.json()
+
+                # Check if the API request was successful
+                if response.status_code == 200:
+                    # Extract relevant weather information
+                    main_weather = weather_data['weather'][0]['main']
+                    description = weather_data['weather'][0]['description']
+                    temperature = weather_data['main']['temp']
+
+                    # Convert temperature to the user's preferred unit
+                    unit = default_units.get(user_id, 'C')
+                    if unit == 'F':
+                        temperature = (temperature * 9/5) + 32
+
+                    # Get the user's DM channel
+                    user = bot.get_user(user_id)
+                    if user:
+                        # Send the daily weather update
+                        await user.send(f'Daily weather update for {location}: {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if unit == "F" else "C"}.')
+                else:
+                    print(f"Unable to fetch daily weather update for {location}.")
+                    # Log the error or handle it as needed
+
+                    # Command to get sunrise and sunset times
+@bot.command(name='sun', help='Get sunrise and sunset times for a location')
+async def get_sun_times(ctx, *, location=None):
+    if location is None:
+        # Check if user has a default location
+        if ctx.author.id in default_locations:
+            location = default_locations[ctx.author.id]
+        else:
+            await ctx.send("Please provide a location or set a default location using !setlocation.")
+            return
+
+    # Call OpenWeatherMap API
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Extract sunrise and sunset times
+        sunrise_time = datetime.datetime.utcfromtimestamp(weather_data['sys']['sunrise']).strftime('%Y-%m-%d %H:%M:%S')
+        sunset_time = datetime.datetime.utcfromtimestamp(weather_data['sys']['sunset']).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Send the sunrise and sunset times to the Discord channel
+        await ctx.send(f'The sunrise in {location} is at {sunrise_time} UTC, and the sunset is at {sunset_time} UTC.')
+    else:
+        await ctx.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+
+# Command to get weather alerts for a location
+@bot.command(name='alerts', help='Get weather alerts for a location')
+async def get_alerts(ctx, *, location=None):
+    if location is None:
+        # Check if user has a default location
+        if ctx.author.id in default_locations:
+            location = default_locations[ctx.author.id]
+        else:
+            await ctx.send("Please provide a location or set a default location using !setlocation.")
+            return
+
+    # Call OpenWeatherMap API
+    alerts_api_url = f'https://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(alerts_api_url)
+    weather_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Check if there are any weather alerts
+        if 'alerts' in weather_data:
+            # Extract and display weather alerts
+            alerts = weather_data['alerts']
+            alert_message = f'Weather alerts for {location}:\n'
+            for alert in alerts:
+                event = alert['event']
+                description = alert['description']
+                start_time = datetime.datetime.utcfromtimestamp(alert['start']).strftime('%Y-%m-%d %H:%M:%S UTC')
+                end_time = datetime.datetime.utcfromtimestamp(alert['end']).strftime('%Y-%m-%d %H:%M:%S UTC')
+                alert_message += f'{event}: {description}\nStart Time: {start_time}\nEnd Time: {end_time}\n\n'
+            
+            await ctx.send(alert_message)
+        else:
+            await ctx.send(f'No weather alerts for {location}.')
+    else:
+        await ctx.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
+
+@bot.command(name='format', help='Choose message format (embed/plain)')
+async def format_message(ctx, message_format):
+    if message_format.lower() == 'embed':
+        embed = discord.Embed(title='Formatted Message', description='This is an example of an embed message.')
+        await ctx.send(embed=embed)
+    elif message_format.lower() == 'plain':
+        await ctx.send('This is an example of a plain text message.')
+    else:
+        await ctx.send('Invalid format. Please choose either "embed" or "plain".')
+
+@bot.command(name='weatherbotinfo', help='Get information about the weather bot')
+async def bot_info(ctx):
+    # Provide a brief description of the bot
+    description = "Weather Bot is a Discord bot that provides weather information and updates."
+
+    # Send the bot information to the Discord channel
+    await ctx.send(description)
+
+
+# Event to print a message when the bot is ready
+@bot.event
+async def on_ready():
+    print(f'{bot.user.name} has connected to Discord!')
+    send_daily_updates.start()
+
+# Run the bot
+bot.run(DISCORD_TOKEN)
