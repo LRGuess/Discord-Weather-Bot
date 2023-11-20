@@ -14,6 +14,7 @@ from discord.ext import commands, tasks
 import requests
 import datetime
 
+
 with open('DisToken.txt') as f:
     distokenread = f.readlines()
     DISCORD_TOKEN = distokenread
