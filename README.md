@@ -1,6 +1,7 @@
 # Discord-Weather-Bot
 
 This repository is for a Discord bot that has capabilities of giving the weather. 
+Website :  https://lrguess.github.io/Discord-Weatherbot.github.io/ 
 
 ____________________________________________________________________________________
 Copyright (c) 2023 K-Bean Studios
