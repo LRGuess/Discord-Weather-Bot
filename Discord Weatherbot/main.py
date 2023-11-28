@@ -15,17 +15,18 @@ import requests
 import datetime
 
 
-with open('DisToken.txt') as f:
-    distokenread = f.readlines()
-    DISCORD_TOKEN = distokenread
-    print (DISCORD_TOKEN)
+# with open('DisToken.txt') as f:
+#     distokenread = f.readlines()
+#     DISCORD_TOKEN = distokenread
+#     print (DISCORD_TOKEN)
 
-with open('OpenWeatherAPIKey.txt') as f:
-    apiread = f.readlines()
-    OPENWEATHERMAP_API_KEY = apiread
-    print (OPENWEATHERMAP_API_KEY)
+# with open('OpenWeatherAPIKey.txt') as f:
+#     apiread = f.readlines()
+#     OPENWEATHERMAP_API_KEY = apiread
+#     print (OPENWEATHERMAP_API_KEY)
 
-
+DISCORD_TOKEN = "MTE3NDUwMzMxNDc1OTYyMjczNg.GhZ0Uv.kyIo60OicvRRXEwpxYwmEgD5YGs1UGsFdLWxTE"
+OPENWEATHERMAP_API_KEY = "c9f567f144498e9eef17914f88af8e57"
 
 # Create an instance of the bot
 bot = commands.Bot(command_prefix='!')
