@@ -25,11 +25,16 @@ import datetime
 #     OPENWEATHERMAP_API_KEY = apiread
 #     print (OPENWEATHERMAP_API_KEY)
 
-DISCORD_TOKEN = "MTE3NDUwMzMxNDc1OTYyMjczNg.GhZ0Uv.kyIo60OicvRRXEwpxYwmEgD5YGs1UGsFdLWxTE"
+DISCORD_TOKEN = "MTE3NDUwMzMxNDc1OTYyMjczNg.GsfpmP.XoK0vUo63vO8gImrJoqfhRT85s4SktlfPRVBbQ"
 OPENWEATHERMAP_API_KEY = "c9f567f144498e9eef17914f88af8e57"
 
+
+# Create an instance of Intents
+intents = discord.Intents.default()
+intents.all()
+
 # Create an instance of the bot
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Dictionary to store user default locations (user_id: location)
 default_locations = {}
