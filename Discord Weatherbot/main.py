@@ -11,6 +11,7 @@ You may not distribute or modify this script without proper credit to K-Bean Stu
 """
 import discord
 from discord.ext import commands, tasks
+from discord_slash import SlashCommand
 import requests
 import datetime
 
@@ -40,6 +41,8 @@ class MarkCog(commands.Cog):
         self.bot = bot  
 
         self.default_locations = default_locations
+        self.default_units = default_units
+        self.daily_update_times = daily_update_times
 
     # Command to get the weather
     @commands.command(name='weather', help='Get the current weather for a location')
@@ -323,7 +326,7 @@ async def on_ready():
     send_daily_updates.start()
     print(f'{bot.user.name} has connected to Discord!')
     print(f'Loading Cogs...')
-    await bot.add_cog(MarkCog(bot))  # Replace with the actual module name
+    await bot.add_cog(MarkCog(bot))
     print(f'Cogs loaded successfully!')
 
 # Run the bot
