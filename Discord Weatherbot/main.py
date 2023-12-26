@@ -11,7 +11,7 @@ You may not distribute or modify this script without proper credit to K-Bean Stu
 """
 import discord
 from discord.ext import commands, tasks
-from discord_slash import SlashCommand
+import discord_slash
 import requests
 import datetime
 

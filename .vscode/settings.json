@@ -1,0 +1,4 @@
+{
+    "python.missingPackage.severity": "Error",
+    "python.autoComplete.extraPaths": []
+}
