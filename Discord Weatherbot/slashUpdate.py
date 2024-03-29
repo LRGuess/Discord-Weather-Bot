@@ -264,7 +264,7 @@ async def get_alerts(ctx, *, location: str = None):
         await ctx.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
 
 @tree.command(name="format", description="Choose message format (embed/plain)")
-async def format_message(ctx, message_format):
+async def format_message(ctx, message_format: str):
     if message_format.lower() == 'embed':
         embed = discord.Embed(title='Formatted Message', description='This is an example of an embed message.')
         await ctx.send(embed=embed)
