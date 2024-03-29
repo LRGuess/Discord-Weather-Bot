@@ -1,4 +1,5 @@
 {
     "python.missingPackage.severity": "Error",
-    "python.autoComplete.extraPaths": []
+    "python.autoComplete.extraPaths": [],
+    "python.analysis.extraPaths": []
 }
