@@ -16,7 +16,7 @@ import requests
 import datetime
 
 DISCORD_TOKEN = "MTE3NDUwMzMxNDc1OTYyMjczNg.GsfpmP.XoK0vUo63vO8gImrJoqfhRT85s4SktlfPRVBbQ"
-OPENWEATHERMAP_API_KEY = "c9f567f144498e9eef17914f88af8e57"
+OPENWEATHERMAP_API_KEY = "4238ab31b52481e2af74edf456dd1cb8"
 
 
 # Create an instance of Intents
@@ -42,14 +42,20 @@ async def test_command(ctx):
 
 # Command to get the weather
 @tree.command(name="weather", description="Get the current weather for a location")
-async def get_weather(ctx, *, location: str = None):
+async def get_weather(ctx: discord.Interaction, *, location: str = None):
+    # Retrieve user ID from the interaction
+    user_id = ctx.user.id
+    
+    # Retrieve user preferences from the storage mechanism based on the user ID
+    default_location = default_locations.get(user_id)
+    default_unit = default_units.get(user_id, 'C')
+
     if location is None:
-        # Check if user has a default location
-        if ctx.author.id in default_locations:
-            location = default_locations[ctx.author.id]
-        else:
-            await ctx.send("Please provide a location or set a default location using /setlocation.")
-            return
+        location = default_location
+    
+    if location is None:
+        await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+        return
 
     # Call OpenWeatherMap API
     weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
@@ -66,15 +72,13 @@ async def get_weather(ctx, *, location: str = None):
         temperature = temperature_main - 273.15
 
         # Convert temperature to the user's preferred unit
-        if ctx.author.id in default_units and default_units[ctx.author.id] == 'F':
+        if default_unit == 'F':
             temperature = (temperature_main - 273.15) * 9/5 + 32
 
-        
         # Send the weather information to the Discord channel
-        await ctx.respond(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}.')
+        await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
     else:
-        await ctx.respond(f"Unable to fetch weather data for {location}. Please check the location and try again.")
-    pass
+        await ctx.followup.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
 
 # Command to set a default location
 @tree.command(name="setlocation", description="Set a default location for weather updates")
