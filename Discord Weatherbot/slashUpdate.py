@@ -84,7 +84,7 @@ async def set_location(ctx, *, location: str):
 
 # Command to set a default temperature unit
 @tree.command(name="setunit", description="Set a default temperature unit (C or F)")
-async def set_unit(ctx, unit):
+async def set_unit(ctx, unit: str):
     unit = unit.upper()
     if unit == 'C' or unit == 'F':
         default_units[ctx.author.id] = unit
@@ -94,7 +94,7 @@ async def set_unit(ctx, unit):
 
 # Command to set a daily update time
 @tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
-async def set_daily_update(ctx, time):
+async def set_daily_update(ctx, time: str):
     try:
         # Parse the time string and convert it to a datetime.time object
         update_time = datetime.datetime.strptime(time, '%H:%M').time()
