@@ -309,7 +309,7 @@ async def send_daily_updates():
                         temperature = (temperature * 9/5) + 32
 
                     # Get the user's DM channel
-                    user = bot.get_user(user_id)
+                    user = client.get_user(user_id)
                     if user:
                         # Send the daily weather update
                         await user.send(f'Daily weather update for {location}: {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if unit == "F" else "C"}.')
