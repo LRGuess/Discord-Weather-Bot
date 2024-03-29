@@ -42,7 +42,7 @@ async def test_command(ctx):
 
 # Command to get the weather
 @tree.command(name="weather", description="Get the current weather for a location")
-async def get_weather(ctx, *, location=None):
+async def get_weather(ctx, *, location: str = None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
@@ -78,7 +78,7 @@ async def get_weather(ctx, *, location=None):
 
 # Command to set a default location
 @tree.command(name="setlocation", description="Set a default location for weather updates")
-async def set_location(ctx, *, location):
+async def set_location(ctx, *, location: str):
     default_locations[ctx.author.id] = location
     await ctx.send(f'Default location set to {location}')
 
@@ -108,7 +108,7 @@ async def set_daily_update(ctx, time):
 
 # Command to get the wind information
 @tree.command(name="wind", description="Get the wind information for a location")
-async def get_wind(ctx, *, location=None):
+async def get_wind(ctx, *, location: str = None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
@@ -135,7 +135,7 @@ async def get_wind(ctx, *, location=None):
 
 # Command to get the humidity information
 @tree.command(name="humidity", description="Get the humidity information for a location")
-async def get_humidity(ctx, *, location=None):
+async def get_humidity(ctx, *, location: str = None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
@@ -161,7 +161,7 @@ async def get_humidity(ctx, *, location=None):
 
 # Command to get the weather forecast
 @tree.command(name="forecast", description="Get the weather forecast for a location")
-async def get_forecast(ctx, *, location=None):
+async def get_forecast(ctx, *, location: str = None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
@@ -202,7 +202,7 @@ async def get_forecast(ctx, *, location=None):
 
 # Command to get sunrise and sunset times
 @tree.command(name="sun", description="Get sunrise and sunset times for a location")
-async def get_sun_times(ctx, *, location=None):
+async def get_sun_times(ctx, *, location: str = None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
@@ -229,7 +229,7 @@ async def get_sun_times(ctx, *, location=None):
 
 # Command to get weather alerts for a location
 @tree.command(name="alerts", description="Get weather alerts for a location")
-async def get_alerts(ctx, *, location=None):    
+async def get_alerts(ctx, *, location: str = None):    
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
