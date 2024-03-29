@@ -324,9 +324,6 @@ async def send_daily_updates():
 async def on_ready():
     send_daily_updates.start()
     print(f'{bot.user.name} has connected to Discord!')
-    print(f'Loading Cogs...')
-    await bot.add_cog(MarkCog(bot))
-    print(f'Cogs loaded successfully!')
 
 # Run the bot
 bot.debug = True
