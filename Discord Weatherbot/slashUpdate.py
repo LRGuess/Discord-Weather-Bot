@@ -10,7 +10,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 You may not distribute or modify this script without proper credit to K-Bean Studios.
 """
 import discord
-from discord.ext import commands, tasks
+from discord import app_commands
+from discord.ext import tasks
 import requests
 import datetime
 
@@ -22,7 +23,8 @@ OPENWEATHERMAP_API_KEY = "c9f567f144498e9eef17914f88af8e57"
 intents = discord.Intents.all()
 
 # Create an instance of the bot
-bot = commands.Bot(command_prefix='/', intents=intents)
+client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 
 # Dictionary to store user default locations (user_id: location)
 default_locations = {}
@@ -33,23 +35,18 @@ default_units = {}
 # Dictionary to store user daily update times (user_id: time)
 daily_update_times = {}
 
-# Register a cog for traditional commands
-
-
-def __init__(self, bot):
-    self.bot = bot  
-
-    self.default_locations = default_locations
-    self.default_units = default_units
-    self.daily_update_times = daily_update_times
+#TEST COMMAND
+@tree.command(name="test", description="A test command for slashes")
+async def test_command(ctx):
+    await print("worked!")
 
 # Command to get the weather
-@commands.command(name='weather', help='Get the current weather for a location')
-async def get_weather(self, ctx, *, location=None):
+@tree.command(name="weather", description="Get the current weather for a location")
+async def get_weather(ctx, *, location=None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
-            location = self.default_locations[ctx.author.id]
+            location = default_locations[ctx.author.id]
         else:
             await ctx.send("Please provide a location or set a default location using /setlocation.")
             return
@@ -77,44 +74,45 @@ async def get_weather(self, ctx, *, location=None):
         await ctx.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}.')
     else:
         await ctx.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
+    pass
 
 # Command to set a default location
-@commands.command(name='setlocation', help='Set a default location for weather updates')
-async def set_location(self, ctx, *, location):
-    self.default_locations[ctx.author.id] = location
+@tree.command(name="setlocation", description="Set a default location for weather updates")
+async def set_location(ctx, *, location):
+    default_locations[ctx.author.id] = location
     await ctx.send(f'Default location set to {location}')
 
 # Command to set a default temperature unit
-@commands.command(name='setunit', help='Set a default temperature unit (C or F)')
-async def set_unit(self, ctx, unit):
+@tree.command(name="setunit", description="Set a default temperature unit (C or F)")
+async def set_unit(ctx, unit):
     unit = unit.upper()
     if unit == 'C' or unit == 'F':
-        self.default_units[ctx.author.id] = unit
+        default_units[ctx.author.id] = unit
         await ctx.send(f'Default temperature unit set to {unit}.')
     else:
         await ctx.send('Invalid unit. Please use C or F.')
 
 # Command to set a daily update time
-@commands.command(name='dailyupdate', help='Set a specific time for daily weather updates')
-async def set_daily_update(self, ctx, time):
+@tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
+async def set_daily_update(ctx, time):
     try:
         # Parse the time string and convert it to a datetime.time object
         update_time = datetime.datetime.strptime(time, '%H:%M').time()
 
         # Store the user's daily update time
-        self.daily_update_times[ctx.author.id] = update_time
+        daily_update_times[ctx.author.id] = update_time
 
         await ctx.send(f'Daily weather update time set to {time}.')
     except ValueError:
         await ctx.send('Invalid time format. Please use HH:MM.')
 
 # Command to get the wind information
-@commands.command(name='wind', help='Get the wind information for a location')
-async def get_wind(self, ctx, *, location=None):
+@tree.command(name="wind", description="Get the wind information for a location")
+async def get_wind(ctx, *, location=None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
-            location = self.default_locations[ctx.author.id]
+            location = default_locations[ctx.author.id]
         else:
             await ctx.send("Please provide a location or set a default location using /setlocation.")
             return
@@ -136,12 +134,12 @@ async def get_wind(self, ctx, *, location=None):
         await ctx.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
 
 # Command to get the humidity information
-@commands.command(name='humidity', help='Get the humidity information for a location')
-async def get_humidity(self, ctx, *, location=None):
+@tree.command(name="humidity", description="Get the humidity information for a location")
+async def get_humidity(ctx, *, location=None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
-            location = self.default_locations[ctx.author.id]
+            location = default_locations[ctx.author.id]
         else:
             await ctx.send("Please provide a location or set a default location using /setlocation.")
             return
@@ -162,12 +160,12 @@ async def get_humidity(self, ctx, *, location=None):
         await ctx.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
 
 # Command to get the weather forecast
-@commands.command(name='forecast', help='Get the weather forecast for a location')
-async def get_forecast(self, ctx, *, location=None):
+@tree.command(name="forecast", description="Get the weather forecast for a location")
+async def get_forecast(ctx, *, location=None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
-            location = self.default_locations[ctx.author.id]
+            location = default_locations[ctx.author.id]
         else:
             await ctx.send("Please provide a location or set a default location using /setlocation.")
             return
@@ -202,13 +200,13 @@ async def get_forecast(self, ctx, *, location=None):
     else:
         await ctx.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
 
-                    # Command to get sunrise and sunset times
-@commands.command(name='sun', help='Get sunrise and sunset times for a location')
-async def get_sun_times(self, ctx, *, location=None):
+# Command to get sunrise and sunset times
+@tree.command(name="sun", description="Get sunrise and sunset times for a location")
+async def get_sun_times(ctx, *, location=None):
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
-            location = self.default_locations[ctx.author.id]
+            location = default_locations[ctx.author.id]
         else:
             await ctx.send("Please provide a location or set a default location using /setlocation.")
             return
@@ -230,12 +228,12 @@ async def get_sun_times(self, ctx, *, location=None):
         await ctx.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
 
 # Command to get weather alerts for a location
-@commands.command(name='alerts', help='Get weather alerts for a location')
-async def get_alerts(self, ctx, *, location=None):
+@tree.command(name="alerts", description="Get weather alerts for a location")
+async def get_alerts(ctx, *, location=None):    
     if location is None:
         # Check if user has a default location
         if ctx.author.id in default_locations:
-            location = self.default_locations[ctx.author.id]
+            location = default_locations[ctx.author.id]
         else:
             await ctx.send("Please provide a location or set a default location using /setlocation.")
             return
@@ -265,8 +263,8 @@ async def get_alerts(self, ctx, *, location=None):
     else:
         await ctx.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
 
-@commands.command(name='format', help='Choose message format (embed/plain)')
-async def format_message(self, ctx, message_format):
+@tree.command(name="format", description="Choose message format (embed/plain)")
+async def format_message(ctx, message_format):
     if message_format.lower() == 'embed':
         embed = discord.Embed(title='Formatted Message', description='This is an example of an embed message.')
         await ctx.send(embed=embed)
@@ -275,8 +273,8 @@ async def format_message(self, ctx, message_format):
     else:
         await ctx.send('Invalid format. Please choose either "embed" or "plain".')
 
-@commands.command(name='weatherbotinfo', help='Get information about the weather bot')
-async def info_command(self, ctx):
+@tree.command(name="weatherbotinfo", description="Get information about the weather bot")
+async def info_command(ctx):
     # Provide a brief description of the bot
     description = "Weather Bot is a Discord bot that provides weather information and updates."
 
@@ -320,11 +318,12 @@ async def send_daily_updates():
                     # Log the error or handle it as needed
 
 # Event to print a message when the bot is ready
-@bot.event
+@client.event
 async def on_ready():
     send_daily_updates.start()
-    print(f'{bot.user.name} has connected to Discord!')
+    await tree.sync()
+    print(f'{client.user.name} has connected to Discord!')
 
 # Run the bot
-bot.debug = True
-bot.run(DISCORD_TOKEN, reconnect=True)
+client.debug = True
+client.run(DISCORD_TOKEN, reconnect=True)
