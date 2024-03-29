@@ -71,9 +71,9 @@ async def get_weather(ctx, *, location: str = None):
 
         
         # Send the weather information to the Discord channel
-        await ctx.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}.')
+        await ctx.respond(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}.')
     else:
-        await ctx.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
+        await ctx.respond(f"Unable to fetch weather data for {location}. Please check the location and try again.")
     pass
 
 # Command to set a default location
