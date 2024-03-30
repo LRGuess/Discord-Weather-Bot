@@ -145,13 +145,15 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
 
 # Command to get the humidity information
 @tree.command(name="humidity", description="Get the humidity information for a location")
-async def get_humidity(ctx, *, location: str = None):
+async def get_humidity(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
     if location is None:
         # Check if user has a default location
-        if ctx.author.id in default_locations:
-            location = default_locations[ctx.author.id]
+        if ctx.user.id in default_locations:
+            location = default_locations[ctx.user.id]
         else:
-            await ctx.send("Please provide a location or set a default location using /setlocation.")
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
 
     # Call OpenWeatherMap API
@@ -165,9 +167,9 @@ async def get_humidity(ctx, *, location: str = None):
         humidity = weather_data['main']['humidity']
 
         # Send the humidity information to the Discord channel
-        await ctx.send(f'The humidity in {location} is {humidity}%.')
+        await ctx.followup.send(f'The humidity in {location} is {humidity}%.')
     else:
-        await ctx.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
+        await ctx.followup.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
 
 # Command to get the weather forecast
 @tree.command(name="forecast", description="Get the weather forecast for a location")
