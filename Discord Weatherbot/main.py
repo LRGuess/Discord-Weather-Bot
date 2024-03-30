@@ -13,9 +13,14 @@ import discord
 from discord.ext import commands, tasks
 import requests
 import datetime
+from dotenv import load_dotenv
+import os
 
-DISCORD_TOKEN = "MTE3NDUwMzMxNDc1OTYyMjczNg.GsfpmP.XoK0vUo63vO8gImrJoqfhRT85s4SktlfPRVBbQ"
-OPENWEATHERMAP_API_KEY = "c9f567f144498e9eef17914f88af8e57"
+# Load environment variables from .env file
+load_dotenv()
+
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+OPENWEATHERMAP_API_KEY = os.getenv('OPENWEATHERMAP_API_KEY')
 
 
 # Create an instance of Intents
