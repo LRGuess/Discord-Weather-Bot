@@ -12,6 +12,7 @@ You may not distribute or modify this script without proper credit to K-Bean Stu
 import discord
 from discord import app_commands
 from discord.ext import tasks
+import pytz
 import requests
 import datetime
 
@@ -237,8 +238,12 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
     if response.status_code == 200:
         await ctx.response.defer()
         # Extract sunrise and sunset times
-        sunrise_time = datetime.datetime.utcfromtimestamp(weather_data['sys']['sunrise']).strftime('%Y-%m-%d %H:%M:%S')
-        sunset_time = datetime.datetime.utcfromtimestamp(weather_data['sys']['sunset']).strftime('%Y-%m-%d %H:%M:%S')
+        sunrise_timestamp = weather_data['sys']['sunrise']
+        sunset_timestamp = weather_data['sys']['sunset']
+
+        # Convert timestamps to datetime objects
+        sunrise_time = datetime.datetime.fromtimestamp(sunrise_timestamp, pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+        sunset_time = datetime.datetime.fromtimestamp(sunset_timestamp, pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         # Send the sunrise and sunset times to the Discord channel
         await ctx.followup.send(f'The sunrise in {location} is at {sunrise_time} UTC, and the sunset is at {sunset_time} UTC.')
