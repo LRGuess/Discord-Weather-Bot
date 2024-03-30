@@ -296,7 +296,7 @@ async def format_message(ctx: discord.Interaction, message_format: str):
     else:
         await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
 
-@tree.command(name="about", description="Get information about the weather bot")
+@tree.command(name="weatherbotabout", description="Get information about the weather bot")
 async def info_command(ctx: discord.Interaction):
     await ctx.response.defer()
 
@@ -305,6 +305,14 @@ async def info_command(ctx: discord.Interaction):
 
     # Send the bot information to the Discord channel
     await ctx.followup.send(description)
+
+@tree.command(name="weatherbothelp", description="Full list of commands")
+async def help_command(ctx:discord.Interaction):
+    await ctx.response.defer()
+     
+    commandlist = "/weather[location] provides weather for specified location \n /forecast[location] Retrieve a multi-day weather forecast for the specified location \n /setlocation[location] Set your default location for weather updates \n /setunit[F or C] Choose between Celsius and Fahrenheit for temperature units \n /dailyupdate[time] Receive a daily weather update at the specified time \n /wind[location] Get detailed information about the wind conditions at a specific location \n /humidity[location] Check the current humidity level for a given location \n /suntimes[location] Find out the sunrise and sunset times for a particular location \n /alerts[] Receive any weather alerts or warnings for the specified location \n /format[embed/plain] Choose between an embedded or plain text format for weather responses \n /weatherbotinfo[] Get information about WeatherBot, including version and support details"
+
+    await ctx.followup.send(commandlist)
 
 @tasks.loop(hours=24)
 async def send_daily_updates():
@@ -350,5 +358,4 @@ async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
 
 # Run the bot
-client.debug = True
 client.run(DISCORD_TOKEN, reconnect=True)
