@@ -81,9 +81,10 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
 
 # Command to set a default location
 @tree.command(name="setlocation", description="Set a default location for weather updates")
-async def set_location(ctx, *, location: str):
-    default_locations[ctx.author.id] = location
-    await ctx.send(f'Default location set to {location}')
+async def set_location(ctx: discord.Interaction, *, location: str):
+    await ctx.response.defer()
+    default_locations[ctx.user.id] = location
+    await ctx.followup.send(f'Default location set to {location}')
 
 # Command to set a default temperature unit
 @tree.command(name="setunit", description="Set a default temperature unit (C or F)")
