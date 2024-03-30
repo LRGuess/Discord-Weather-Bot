@@ -296,13 +296,15 @@ async def format_message(ctx: discord.Interaction, message_format: str):
     else:
         await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
 
-@tree.command(name="weatherbotinfo", description="Get information about the weather bot")
-async def info_command(ctx):
+@tree.command(name="about", description="Get information about the weather bot")
+async def info_command(ctx: discord.Interaction):
+    await ctx.response.defer()
+
     # Provide a brief description of the bot
-    description = "Weather Bot is a Discord bot that provides weather information and updates."
+    description = "A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: https://kbeanstudios.ca/discordweatherbot. You can also run /help"
 
     # Send the bot information to the Discord channel
-    await ctx.send(description)
+    await ctx.followup.send(description)
 
 @tasks.loop(hours=24)
 async def send_daily_updates():
