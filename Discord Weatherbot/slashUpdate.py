@@ -173,13 +173,15 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
 
 # Command to get the weather forecast
 @tree.command(name="forecast", description="Get the weather forecast for a location")
-async def get_forecast(ctx, *, location: str = None):
+async def get_forecast(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
     if location is None:
         # Check if user has a default location
-        if ctx.author.id in default_locations:
-            location = default_locations[ctx.author.id]
+        if ctx.user.id in default_locations:
+            location = default_locations[ctx.user.id]
         else:
-            await ctx.send("Please provide a location or set a default location using /setlocation.")
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
 
     # Call OpenWeatherMap One Call API
@@ -201,16 +203,16 @@ async def get_forecast(ctx, *, location: str = None):
             description = day['weather'][0]['description']
 
             # Convert temperature to the user's preferred unit
-            if ctx.author.id in default_units and default_units[ctx.author.id] == 'F':
+            if ctx.user.id in default_units and default_units[ctx.user.id] == 'F':
                 temperature_min = (temperature_min * 9/5) + 32
                 temperature_max = (temperature_max * 9/5) + 32
 
-            forecast_message += f'{date}: Min Temp: {temperature_min:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}, Max Temp: {temperature_max:.2f}°{"F" if ctx.author.id in default_units and default_units[ctx.author.id] == "F" else "C"}, Weather: {description}\n'
+            forecast_message += f'{date}: Min Temp: {temperature_min:.2f}°{"F" if ctx.user.id in default_units and default_units[ctx.user.id] == "F" else "C"}, Max Temp: {temperature_max:.2f}°{"F" if ctx.user.id in default_units and default_units[ctx.user.id] == "F" else "C"}, Weather: {description}\n'
 
         # Send the forecast information to the Discord channel
-        await ctx.send(forecast_message)
+        await ctx.followup.send(forecast_message)
     else:
-        await ctx.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
+        await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
 
 # Command to get sunrise and sunset times
 @tree.command(name="sun", description="Get sunrise and sunset times for a location")
