@@ -22,7 +22,7 @@ OPENWEATHERMAP_API_KEY = "c9f567f144498e9eef17914f88af8e57"
 intents = discord.Intents.all()
 
 # Create an instance of the bot
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Dictionary to store user default locations (user_id: location)
 default_locations = {}
