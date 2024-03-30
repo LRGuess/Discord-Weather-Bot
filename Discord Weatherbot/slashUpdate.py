@@ -215,14 +215,17 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
         await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
 
 # Command to get sunrise and sunset times
-@tree.command(name="sun", description="Get sunrise and sunset times for a location")
-async def get_sun_times(ctx, *, location: str = None):
+@tree.command(name="suntimes", description="Get sunrise and sunset times for a location")
+async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
+    
+
     if location is None:
         # Check if user has a default location
-        if ctx.author.id in default_locations:
-            location = default_locations[ctx.author.id]
+        if ctx.user.id in default_locations:
+            location = default_locations[ctx.user.id]
         else:
-            await ctx.send("Please provide a location or set a default location using /setlocation.")
+            await ctx.response.defer()
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
 
     # Call OpenWeatherMap API
@@ -232,14 +235,16 @@ async def get_sun_times(ctx, *, location: str = None):
 
     # Check if the API request was successful
     if response.status_code == 200:
+        await ctx.response.defer()
         # Extract sunrise and sunset times
         sunrise_time = datetime.datetime.utcfromtimestamp(weather_data['sys']['sunrise']).strftime('%Y-%m-%d %H:%M:%S')
         sunset_time = datetime.datetime.utcfromtimestamp(weather_data['sys']['sunset']).strftime('%Y-%m-%d %H:%M:%S')
 
         # Send the sunrise and sunset times to the Discord channel
-        await ctx.send(f'The sunrise in {location} is at {sunrise_time} UTC, and the sunset is at {sunset_time} UTC.')
+        await ctx.followup.send(f'The sunrise in {location} is at {sunrise_time} UTC, and the sunset is at {sunset_time} UTC.')
     else:
-        await ctx.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+        await ctx.response.defer()
+        await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
 
 # Command to get weather alerts for a location
 @tree.command(name="alerts", description="Get weather alerts for a location")
