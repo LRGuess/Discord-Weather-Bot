@@ -88,13 +88,15 @@ async def set_location(ctx: discord.Interaction, *, location: str):
 
 # Command to set a default temperature unit
 @tree.command(name="setunit", description="Set a default temperature unit (C or F)")
-async def set_unit(ctx, unit: str):
+async def set_unit(ctx: discord.Interaction, unit: str):
+    await ctx.response.defer()
+
     unit = unit.upper()
     if unit == 'C' or unit == 'F':
-        default_units[ctx.author.id] = unit
-        await ctx.send(f'Default temperature unit set to {unit}.')
+        default_units[ctx.user.id] = unit
+        await ctx.followup.send(f'Default temperature unit set to {unit}.')
     else:
-        await ctx.send('Invalid unit. Please use C or F.')
+        await ctx.followup.send('Invalid unit. Please use C or F.')
 
 # Command to set a daily update time
 @tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
