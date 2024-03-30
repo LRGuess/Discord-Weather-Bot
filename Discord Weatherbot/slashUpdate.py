@@ -35,11 +35,6 @@ default_units = {}
 # Dictionary to store user daily update times (user_id: time)
 daily_update_times = {}
 
-#TEST COMMAND
-@tree.command(name="test", description="A test command for slashes")
-async def test_command(ctx):
-    await print("worked!")
-
 # Command to get the weather
 @tree.command(name="weather", description="Get the current weather for a location")
 async def get_weather(ctx: discord.Interaction, *, location: str = None):
