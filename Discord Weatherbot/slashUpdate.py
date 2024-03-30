@@ -285,14 +285,16 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
         await ctx.followup.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
 
 @tree.command(name="format", description="Choose message format (embed/plain)")
-async def format_message(ctx, message_format: str):
+async def format_message(ctx: discord.Interaction, message_format: str):
+    await ctx.response.defer()
+
     if message_format.lower() == 'embed':
         embed = discord.Embed(title='Formatted Message', description='This is an example of an embed message.')
-        await ctx.send(embed=embed)
+        await ctx.followup.send(embed=embed)
     elif message_format.lower() == 'plain':
-        await ctx.send('This is an example of a plain text message.')
+        await ctx.followup.send('This is an example of a plain text message.')
     else:
-        await ctx.send('Invalid format. Please choose either "embed" or "plain".')
+        await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
 
 @tree.command(name="weatherbotinfo", description="Get information about the weather bot")
 async def info_command(ctx):
