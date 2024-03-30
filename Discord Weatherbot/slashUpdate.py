@@ -100,27 +100,31 @@ async def set_unit(ctx: discord.Interaction, unit: str):
 
 # Command to set a daily update time
 @tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
-async def set_daily_update(ctx, time: str):
+async def set_daily_update(ctx: discord.Interaction, time: str):
+    await ctx.response.defer()
+
     try:
         # Parse the time string and convert it to a datetime.time object
         update_time = datetime.datetime.strptime(time, '%H:%M').time()
 
         # Store the user's daily update time
-        daily_update_times[ctx.author.id] = update_time
+        daily_update_times[ctx.user.id] = update_time
 
-        await ctx.send(f'Daily weather update time set to {time}.')
+        await ctx.followup.send(f'Daily weather update time set to {time}.')
     except ValueError:
-        await ctx.send('Invalid time format. Please use HH:MM.')
+        await ctx.followup.send('Invalid time format. Please use HH:MM.')
 
 # Command to get the wind information
 @tree.command(name="wind", description="Get the wind information for a location")
-async def get_wind(ctx, *, location: str = None):
+async def get_wind(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
     if location is None:
         # Check if user has a default location
-        if ctx.author.id in default_locations:
-            location = default_locations[ctx.author.id]
+        if ctx.user.id in default_locations:
+            location = default_locations[ctx.user.id]
         else:
-            await ctx.send("Please provide a location or set a default location using /setlocation.")
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
 
     # Call OpenWeatherMap API
@@ -135,9 +139,9 @@ async def get_wind(ctx, *, location: str = None):
         wind_direction = weather_data['wind']['deg']
 
         # Send the wind information to the Discord channel
-        await ctx.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+        await ctx.followup.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
     else:
-        await ctx.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
+        await ctx.followup.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
 
 # Command to get the humidity information
 @tree.command(name="humidity", description="Get the humidity information for a location")
