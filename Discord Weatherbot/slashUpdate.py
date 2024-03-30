@@ -248,13 +248,15 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
 
 # Command to get weather alerts for a location
 @tree.command(name="alerts", description="Get weather alerts for a location")
-async def get_alerts(ctx, *, location: str = None):    
+async def get_alerts(ctx: discord.Interaction, *, location: str = None):    
+    await ctx.response.defer()
+
     if location is None:
         # Check if user has a default location
-        if ctx.author.id in default_locations:
-            location = default_locations[ctx.author.id]
+        if ctx.user.id in default_locations:
+            location = default_locations[ctx.user.id]
         else:
-            await ctx.send("Please provide a location or set a default location using /setlocation.")
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
 
     # Call OpenWeatherMap API
@@ -276,11 +278,11 @@ async def get_alerts(ctx, *, location: str = None):
                 end_time = datetime.datetime.utcfromtimestamp(alert['end']).strftime('%Y-%m-%d %H:%M:%S UTC')
                 alert_message += f'{event}: {description}\nStart Time: {start_time}\nEnd Time: {end_time}\n\n'
             
-            await ctx.send(alert_message)
+            await ctx.followup.send(alert_message)
         else:
-            await ctx.send(f'No weather alerts for {location}.')
+            await ctx.followup.send(f'No weather alerts for {location}.')
     else:
-        await ctx.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
+        await ctx.followup.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
 
 @tree.command(name="format", description="Choose message format (embed/plain)")
 async def format_message(ctx, message_format: str):
