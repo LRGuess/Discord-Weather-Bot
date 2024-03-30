@@ -20,7 +20,7 @@ OPENWEATHERMAP_API_KEY = "4238ab31b52481e2af74edf456dd1cb8"
 
 
 # Create an instance of Intents
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 
 # Create an instance of the bot
 client = discord.Client(intents=intents)
@@ -54,7 +54,11 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
         location = default_location
     
     if location is None:
-        await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+        # Send a follow-up message to request a location
+        try:
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+        except discord.errors.NotFound:
+            await ctx.channel.send("Please provide a location or set a default location using /setlocation.")
         return
 
     # Call OpenWeatherMap API
@@ -76,9 +80,15 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
             temperature = (temperature_main - 273.15) * 9/5 + 32
 
         # Send the weather information to the Discord channel
-        await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
+        try:
+            await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
+        except discord.errors.NotFound:
+            await ctx.channel.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
     else:
-        await ctx.followup.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
+        try:
+            await ctx.followup.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
+        except discord.errors.NotFound:
+            await ctx.channel.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
 
 # Command to set a default location
 @tree.command(name="setlocation", description="Set a default location for weather updates")
