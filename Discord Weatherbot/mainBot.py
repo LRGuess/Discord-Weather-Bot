@@ -256,14 +256,19 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
         sunrise_timestamp = weather_data['sys']['sunrise']
         sunset_timestamp = weather_data['sys']['sunset']
 
-        # Convert timestamps to datetime objects in the location's timezone
+        # Convert timestamps to timezone-aware datetime objects
         timezone_offset = weather_data['timezone']
-        timezone_name = pytz.timezone(pytz.country_timezones[weather_data['sys']['country']][0]).zone
-        sunrise_time = datetime.datetime.fromtimestamp(sunrise_timestamp, tz=datetime.timezone(datetime.timedelta(seconds=timezone_offset))).strftime('%Y-%m-%d %H:%M:%S')
-        sunset_time = datetime.datetime.fromtimestamp(sunset_timestamp, tz=datetime.timezone(datetime.timedelta(seconds=timezone_offset))).strftime('%Y-%m-%d %H:%M:%S')
+        sunrise_time_utc = datetime.datetime.fromtimestamp(sunrise_timestamp, tz=pytz.utc)
+        sunrise_time_local = sunrise_time_utc.astimezone(pytz.timezone(f'Etc/GMT{timezone_offset//3600}'))
+        sunset_time_utc = datetime.datetime.fromtimestamp(sunset_timestamp, tz=pytz.utc)
+        sunset_time_local = sunset_time_utc.astimezone(pytz.timezone(f'Etc/GMT{timezone_offset//3600}'))
 
-        # Send the sunrise and sunset times with timezone information to the Discord channel
-        await ctx.followup.send(f'The sunrise in {location} is at {sunrise_time} ({timezone_name}), and the sunset is at {sunset_time} ({timezone_name}).')
+        # Format sunrise and sunset times as Discord timestamps
+        formatted_sunrise_time = sunrise_time_local.strftime('<t:%s:R>') % sunrise_timestamp
+        formatted_sunset_time = sunset_time_local.strftime('<t:%s:R>') % sunset_timestamp
+
+        # Send the sunrise and sunset times with Discord timestamps to the Discord channel
+        await ctx.followup.send(f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
     else:
         await ctx.response.defer()
         await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
