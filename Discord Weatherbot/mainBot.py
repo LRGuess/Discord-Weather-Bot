@@ -230,17 +230,18 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     else:
         await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
 
+import pytz
+
 # Command to get sunrise and sunset times
 @tree.command(name="suntimes", description="Get sunrise and sunset times for a location")
 async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
-    
+    await ctx.response.defer()
 
     if location is None:
         # Check if user has a default location
         if ctx.user.id in default_locations:
             location = default_locations[ctx.user.id]
         else:
-            await ctx.response.defer()
             await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
 
@@ -251,7 +252,6 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
 
     # Check if the API request was successful
     if response.status_code == 200:
-        await ctx.response.defer()
         # Extract sunrise and sunset times
         sunrise_timestamp = weather_data['sys']['sunrise']
         sunset_timestamp = weather_data['sys']['sunset']
@@ -263,14 +263,18 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
         sunset_time_utc = datetime.datetime.fromtimestamp(sunset_timestamp, tz=pytz.utc)
         sunset_time_local = sunset_time_utc.astimezone(pytz.timezone(f'Etc/GMT{timezone_offset//3600}'))
 
-        # Format sunrise and sunset times as Discord timestamps
-        formatted_sunrise_time = sunrise_time_local.strftime('<t:%s:R>') % sunrise_timestamp
-        formatted_sunset_time = sunset_time_local.strftime('<t:%s:R>') % sunset_timestamp
+        # Convert datetime objects to Unix timestamps
+        sunrise_timestamp = sunrise_time_local.timestamp()
+        sunset_timestamp = sunset_time_local.timestamp()
+
+        # Format timestamps as Discord timestamps
+        formatted_sunrise_time = f'<t:{int(sunrise_timestamp)}:R>'
+        formatted_sunset_time = f'<t:{int(sunset_timestamp)}:R>'
+
 
         # Send the sunrise and sunset times with Discord timestamps to the Discord channel
         await ctx.followup.send(f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
     else:
-        await ctx.response.defer()
         await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
 
 # Command to get weather alerts for a location
