@@ -345,6 +345,12 @@ async def help_command(ctx:discord.Interaction):
 
     await ctx.followup.send(commandlist)
 
+@tree.command(name="Smiley", description="Send a smiley face haha")
+async def smiley_command(ctx:discord.Interaction):
+    await ctx.response.defer()
+
+    await ctx.followup.send("😁")
+
 @tasks.loop(hours=24)
 async def send_daily_updates():
     current_time = datetime.datetime.now().time()
