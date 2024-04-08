@@ -229,9 +229,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
         await ctx.followup.send(forecast_message)
     else:
         await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
-
-import pytz
-
+        
 # Command to get sunrise and sunset times
 @tree.command(name="suntimes", description="Get sunrise and sunset times for a location")
 async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
