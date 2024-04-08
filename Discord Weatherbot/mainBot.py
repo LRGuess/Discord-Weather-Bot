@@ -345,7 +345,7 @@ async def help_command(ctx:discord.Interaction):
 
     await ctx.followup.send(commandlist)
 
-@tree.command(name="Smiley", description="Send a smiley face haha")
+@tree.command(name="smiley", description="Send a smiley face haha")
 async def smiley_command(ctx:discord.Interaction):
     await ctx.response.defer()
 
