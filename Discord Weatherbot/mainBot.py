@@ -69,8 +69,13 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
         location = default_location
     
     if location is None:
-        # Send a message to request a location
-        await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+        if format_preference.lower() == 'plain':
+            # Send the weather information as plain text
+            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+        else:
+            # Send the weather information as an embed
+            embed = discord.Embed(title='Error', description="Please provide a location or set a default location using /setlocation.")
+            await ctx.followup.send(embed=embed)
         return
 
     # Call OpenWeatherMap API
@@ -182,10 +187,13 @@ async def set_daily_update(ctx: discord.Interaction, time: str):
 async def get_wind(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
+
     if location is None:
         # Check if user has a default location
-        if ctx.user.id in default_locations:
-            location = default_locations[ctx.user.id]
+        if user_id in default_locations:
+            location = default_locations[user_id]
         else:
             await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
             return
