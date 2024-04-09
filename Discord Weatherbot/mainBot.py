@@ -105,8 +105,18 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
 @tree.command(name="setlocation", description="Set a default location for weather updates")
 async def set_location(ctx: discord.Interaction, *, location: str):
     await ctx.response.defer()
+
+    user_id = ctx.user.id
     default_locations[ctx.user.id] = location
-    await ctx.followup.send(f'Default location set to {location}')
+    format_preference = format_preferences.get(user_id, 'embed')
+
+    if format_preference.lower() == 'plain':
+            # Send the weather information as plain text
+            await ctx.followup.send(f'Default location set to {location}')
+    else:
+        # Send the weather information as an embed
+        embed = discord.Embed(title=f"Setting location", description=f'Default location set to {location}')
+        await ctx.followup.send(embed=embed)
 
 # Command to set a default temperature unit
 @tree.command(name="setunit", description="Set a default temperature unit (C or F)")
