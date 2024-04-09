@@ -195,8 +195,14 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
         if user_id in default_locations:
             location = default_locations[user_id]
         else:
-            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
-            return
+            if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                #send as embed
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)
+        return
 
     # Call OpenWeatherMap API
     weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
@@ -210,9 +216,21 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
         wind_direction = weather_data['wind']['deg']
 
         # Send the wind information to the Discord channel
-        await ctx.followup.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+        if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+        else:
+            #send as embed
+            embed = discord.Embed(title="Wind", description=f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+            await ctx.followup.send(embed=embed)
     else:
-        await ctx.followup.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
+        if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
+        else:
+            #send as embed
+            embed = discord.Embed(title="Error", description=f"Unable to fetch wind information for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed)
 
 # Command to get the humidity information
 @tree.command(name="humidity", description="Get the humidity information for a location")
