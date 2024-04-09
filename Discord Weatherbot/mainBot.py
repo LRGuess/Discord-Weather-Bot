@@ -41,6 +41,9 @@ default_units = {}
 # Dictionary to store user daily update times (user_id: time)
 daily_update_times = {}
 
+# Dictionary to store format preferences for each user
+format_preferences = {}
+
 #Function to convert to local time
 def convert_to_local_time(timestamp, timezone):
     utc_time = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
@@ -60,6 +63,7 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
     # Retrieve user preferences from the storage mechanism based on the user ID
     default_location = default_locations.get(user_id)
     default_unit = default_units.get(user_id, 'C')
+    format_preference = format_preferences.get(user_id, 'embed')  # Get format preference or default to 'embed'
 
     if location is None:
         location = default_location
@@ -76,9 +80,6 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
 
     # Check if the API request was successful
     if response.status_code == 200:
-        # Extract timezone information
-        timezone = weather_data['timezone']  # Timezone offset in seconds
-        
         # Extract relevant weather information
         main_weather = weather_data['weather'][0]['main']
         description = weather_data['weather'][0]['description']
@@ -90,8 +91,13 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
         if default_unit == 'F':
             temperature = (temperature_main - 273.15) * 9/5 + 32
 
-        # Send the weather information to the Discord channel
-        await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
+        if format_preference.lower() == 'plain':
+            # Send the weather information as plain text
+            await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
+        else:
+            # Send the weather information as an embed
+            embed = discord.Embed(title=f"Weather in {location}", description=f"{main_weather} ({description}) with a temperature of {temperature:.2f}°{'F' if default_unit == 'F' else 'C'}")
+            await ctx.followup.send(embed=embed)
     else:
         await ctx.followup.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
 
@@ -229,7 +235,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
         await ctx.followup.send(forecast_message)
     else:
         await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
-        
+
 # Command to get sunrise and sunset times
 @tree.command(name="suntimes", description="Get sunrise and sunset times for a location")
 async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
@@ -312,18 +318,18 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(f'No weather alerts for {location}.')
     else:
         await ctx.followup.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
-
+# Command to set message format preference
 @tree.command(name="format", description="Choose message format (embed/plain)")
 async def format_message(ctx: discord.Interaction, message_format: str):
     await ctx.response.defer()
 
-    if message_format.lower() == 'embed':
-        embed = discord.Embed(title='Formatted Message', description='This is an example of an embed message.')
-        await ctx.followup.send(embed=embed)
-    elif message_format.lower() == 'plain':
-        await ctx.followup.send('This is an example of a plain text message.')
+    if message_format.lower() in ['embed', 'plain']:
+        # Store the format preference for the user
+        format_preferences[ctx.user.id] = message_format.lower()
+        await ctx.followup.send(f'Message format preference set to {message_format.lower()}.')
     else:
         await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
+
 
 @tree.command(name="weatherbotabout", description="Get information about the weather bot")
 async def info_command(ctx: discord.Interaction):
