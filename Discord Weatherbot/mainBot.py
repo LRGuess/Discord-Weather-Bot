@@ -126,7 +126,7 @@ async def set_unit(ctx: discord.Interaction, unit: str):
     user_id = ctx.user.id
     format_preference = format_preferences.get(user_id, 'embed')
     unit = unit.upper()
-    default_units[ctx.user.id] = unit
+    default_units[user_id] = unit
 
     if unit == 'C' or unit == 'F':
         if format_preference.lower() == 'plain':
@@ -150,16 +150,32 @@ async def set_unit(ctx: discord.Interaction, unit: str):
 async def set_daily_update(ctx: discord.Interaction, time: str):
     await ctx.response.defer()
 
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
+
     try:
         # Parse the time string and convert it to a datetime.time object
         update_time = datetime.datetime.strptime(time, '%H:%M').time()
 
         # Store the user's daily update time
-        daily_update_times[ctx.user.id] = update_time
+        daily_update_times[user_id] = update_time
 
-        await ctx.followup.send(f'Daily weather update time set to {time}.')
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f'Daily weather update time set to {time}.')
+        else:
+            #send as embed
+            embed = discord.Embed(title=f'Time set', description=f'Daily weather update time set to {time}.')
+            await ctx.followup.send(embed=embed)
+
     except ValueError:
-        await ctx.followup.send('Invalid time format. Please use HH:MM.')
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send('Invalid time format. Please use HH:MM.')
+        else:
+            #send as embed
+            embed = discord.Embed(title=f'Invalid format', description='Invalid time format. Please use HH:MM.')
+            await ctx.followup.send(embed=embed)
 
 # Command to get the wind information
 @tree.command(name="wind", description="Get the wind information for a location")
