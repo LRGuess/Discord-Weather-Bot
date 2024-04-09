@@ -123,12 +123,27 @@ async def set_location(ctx: discord.Interaction, *, location: str):
 async def set_unit(ctx: discord.Interaction, unit: str):
     await ctx.response.defer()
 
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
     unit = unit.upper()
+    default_units[ctx.user.id] = unit
+
     if unit == 'C' or unit == 'F':
-        default_units[ctx.user.id] = unit
-        await ctx.followup.send(f'Default temperature unit set to {unit}.')
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f'Default temperature unit set to {unit}.')
+        else:
+            #send as embed
+            embed = discord.Embed(title=f'Unit set', description=f'Default temperature unit set to {unit}.')
+            await ctx.followup.send(embed=embed)
     else:
-        await ctx.followup.send('Invalid unit. Please use C or F.')
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send('Invalid unit. Please use C or F.')
+        else:
+            #send as embed
+            embed = discord.Embed(title=f'Unit invalid', description='Invalid unit. Please use C or F.')
+            await ctx.followup.send(embed=embed)
 
 # Command to set a daily update time
 @tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
