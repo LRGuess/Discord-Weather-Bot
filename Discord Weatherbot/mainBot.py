@@ -286,13 +286,22 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
 async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
+
     if location is None:
         # Check if user has a default location
-        if ctx.user.id in default_locations:
-            location = default_locations[ctx.user.id]
+        if user_id in default_locations:
+            location = default_locations[user_id]
         else:
-            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
-            return
+            if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                #send as embed
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)            
+        return
 
     # Call OpenWeatherMap One Call API
     forecast_api_url = f'https://api.openweathermap.org/data/2.5/onecall?lat=0&lon=0&exclude=current,minutely,hourly,alerts&appid={OPENWEATHERMAP_API_KEY}&q={location}'
@@ -317,12 +326,24 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
                 temperature_min = (temperature_min * 9/5) + 32
                 temperature_max = (temperature_max * 9/5) + 32
 
-            forecast_message += f'{date}: Min Temp: {temperature_min:.2f}°{"F" if ctx.user.id in default_units and default_units[ctx.user.id] == "F" else "C"}, Max Temp: {temperature_max:.2f}°{"F" if ctx.user.id in default_units and default_units[ctx.user.id] == "F" else "C"}, Weather: {description}\n'
+            forecast_message += f'{date}: Min Temp: {temperature_min:.2f}°{"F" if user_id in default_units and default_units[user_id] == "F" else "C"}, Max Temp: {temperature_max:.2f}°{"F" if user_id in default_units and default_units[user_id] == "F" else "C"}, Weather: {description}\n'
 
         # Send the forecast information to the Discord channel
-        await ctx.followup.send(forecast_message)
+        if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send(forecast_message)
+        else:
+            #send as embed
+            embed = discord.Embed(title="Forecast", description=forecast_message)
+            await ctx.followup.send(embed=embed)   
     else:
-        await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
+        else:
+            #send as embed
+            embed = discord.Embed(title="Forecast error", description=f"Unable to fetch weather forecast for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed)   
 
 # Command to get sunrise and sunset times
 @tree.command(name="suntimes", description="Get sunrise and sunset times for a location")
