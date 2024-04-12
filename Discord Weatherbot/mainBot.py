@@ -492,6 +492,7 @@ async def format_message(ctx: discord.Interaction, message_format: str):
 @tree.command(name="weatherbotabout", description="Get information about the weather bot")
 async def info_command(ctx: discord.Interaction):
     await ctx.response.defer()
+
     user_id = ctx.user.id
     format_preference = format_preferences.get(user_id, 'embed')
 
@@ -511,9 +512,18 @@ async def info_command(ctx: discord.Interaction):
 async def help_command(ctx:discord.Interaction):
     await ctx.response.defer()
      
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
+
     commandlist = "/weather[location] provides weather for specified location \n /forecast[location] Retrieve a multi-day weather forecast for the specified location \n /setlocation[location] Set your default location for weather updates \n /setunit[F or C] Choose between Celsius and Fahrenheit for temperature units \n /dailyupdate[time] Receive a daily weather update at the specified time \n /wind[location] Get detailed information about the wind conditions at a specific location \n /humidity[location] Check the current humidity level for a given location \n /suntimes[location] Find out the sunrise and sunset times for a particular location \n /alerts[] Receive any weather alerts or warnings for the specified location \n /format[embed/plain] Choose between an embedded or plain text format for weather responses \n /weatherbotinfo[] Get information about WeatherBot, including version and support details"
 
-    await ctx.followup.send(commandlist)
+    if format_preference.lower() == 'plain':
+        #send message as a plain text
+        await ctx.followup.send(commandlist)
+    else:
+        #send as embed
+        embed = discord.Embed(title="Command list", description=commandlist)
+        await ctx.followup.send(embed=embed)
 
 @tree.command(name="smiley", description="Send a smiley face haha")
 async def smiley_command(ctx:discord.Interaction):
