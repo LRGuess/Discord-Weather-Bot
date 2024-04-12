@@ -504,7 +504,7 @@ async def info_command(ctx: discord.Interaction):
         await ctx.followup.send(description)
     else:
         #send as embed
-        embed = discord.Embed(title="Description", description=description)
+        embed = discord.Embed(title="About", description=description)
         await ctx.followup.send(embed=embed) 
 
 @tree.command(name="weatherbothelp", description="Full list of commands")
