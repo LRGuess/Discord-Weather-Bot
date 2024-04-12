@@ -416,12 +416,21 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
 async def get_alerts(ctx: discord.Interaction, *, location: str = None):    
     await ctx.response.defer()
 
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
+
     if location is None:
         # Check if user has a default location
         if ctx.user.id in default_locations:
             location = default_locations[ctx.user.id]
         else:
-            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                #send as embed
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)  
             return
 
     # Call OpenWeatherMap API
@@ -442,12 +451,31 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
                 start_time = datetime.datetime.utcfromtimestamp(alert['start']).strftime('%Y-%m-%d %H:%M:%S UTC')
                 end_time = datetime.datetime.utcfromtimestamp(alert['end']).strftime('%Y-%m-%d %H:%M:%S UTC')
                 alert_message += f'{event}: {description}\nStart Time: {start_time}\nEnd Time: {end_time}\n\n'
-            
-            await ctx.followup.send(alert_message)
+
+            if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send(alert_message)
+            else:
+                #send as embed
+                embed = discord.Embed(title="Alerts", description=alert_message)
+                await ctx.followup.send(embed=embed)  
         else:
-            await ctx.followup.send(f'No weather alerts for {location}.')
+            if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send(f'No weather alerts for {location}.')
+            else:
+                #send as embed
+                embed = discord.Embed(title="No Alerts", description=f'No weather alerts for {location}.')
+                await ctx.followup.send(embed=embed)  
     else:
-        await ctx.followup.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
+        if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send(f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
+        else:
+            #send as embed
+            embed = discord.Embed(title="Alert Error", description=f"Unable to fetch weather alerts for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed) 
+
 # Command to set message format preference
 @tree.command(name="format", description="Choose message format (embed/plain)")
 async def format_message(ctx: discord.Interaction, message_format: str):
@@ -464,12 +492,20 @@ async def format_message(ctx: discord.Interaction, message_format: str):
 @tree.command(name="weatherbotabout", description="Get information about the weather bot")
 async def info_command(ctx: discord.Interaction):
     await ctx.response.defer()
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
 
     # Provide a brief description of the bot
     description = "A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: https://kbeanstudios.ca/discordweatherbot. You can also run /help"
 
     # Send the bot information to the Discord channel
-    await ctx.followup.send(description)
+    if format_preference.lower() == 'plain':
+        #send message as a plain text
+        await ctx.followup.send(description)
+    else:
+        #send as embed
+        embed = discord.Embed(title="Description", description=description)
+        await ctx.followup.send(embed=embed) 
 
 @tree.command(name="weatherbothelp", description="Full list of commands")
 async def help_command(ctx:discord.Interaction):
