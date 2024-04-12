@@ -350,12 +350,21 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
 async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
+    user_id = ctx.user.id
+    format_preference = format_preferences.get(user_id, 'embed')
+
     if location is None:
         # Check if user has a default location
         if ctx.user.id in default_locations:
             location = default_locations[ctx.user.id]
         else:
-            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            if format_preference.lower() == 'plain':
+                #send message as a plain text
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                #send as embed
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)             
             return
 
     # Call OpenWeatherMap API
@@ -386,9 +395,21 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
 
 
         # Send the sunrise and sunset times with Discord timestamps to the Discord channel
-        await ctx.followup.send(f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
+        else:
+            #send as embed
+            embed = discord.Embed(title="Sun times", description=f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
+            await ctx.followup.send(embed=embed)    
     else:
-        await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+        else:
+            #send as embed
+            embed = discord.Embed(title="Sun times error", description=f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed)  
 
 # Command to get weather alerts for a location
 @tree.command(name="alerts", description="Get weather alerts for a location")
