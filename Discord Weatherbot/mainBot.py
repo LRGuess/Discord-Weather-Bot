@@ -17,22 +17,22 @@ import requests
 import datetime
 from dotenv import load_dotenv
 import os
-import socket
-import sys
+# import socket
+# import sys
  
-HOST = '' 
-PORT = 5555 
+# HOST = '' 
+# PORT = 5555 
  
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-try:
-    s.bind((HOST, PORT))
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# try:
+#     s.bind((HOST, PORT))
     
-except socket.error as msg:
-    print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
-    sys.exit()
+# except socket.error as msg:
+#     print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+#     sys.exit()
 	
-print('Socket bind complete')
-s.listen(10)
+# print('Socket bind complete')
+# s.listen(10)
 
 
 # Load environment variables from .env file
