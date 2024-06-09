@@ -34,10 +34,6 @@ except socket.error as msg:
 print('Socket bind complete')
 s.listen(10)
 
-conn, addr = s.accept()
-
-print('Connected with ' + addr[0] + ':' + str(addr[1]))
-
 
 # Load environment variables from .env file
 load_dotenv()
