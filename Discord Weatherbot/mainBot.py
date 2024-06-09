@@ -17,23 +17,7 @@ import requests
 import datetime
 from dotenv import load_dotenv
 import os
-# import socket
-# import sys
- 
-# HOST = '' 
-# PORT = 5555 
- 
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# try:
-#     s.bind((HOST, PORT))
-    
-# except socket.error as msg:
-#     print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
-#     sys.exit()
-	
-# print('Socket bind complete')
-# s.listen(10)
-
+from flask import Flask
 
 # Load environment variables from .env file
 load_dotenv()
@@ -60,6 +44,19 @@ daily_update_times = {}
 
 # Dictionary to store format preferences for each user
 format_preferences = {}
+
+
+# Open port for Render
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Hello, this is the weather bot!"
+
+if __name__ == "__main__":
+    port = int(os.getenv('PORT'))
+    app.run(host='0.0.0.0', port=port)
+
 
 #Function to convert to local time
 def convert_to_local_time(timestamp, timezone):
