@@ -17,10 +17,11 @@ import requests
 import datetime
 from dotenv import load_dotenv
 import os
-from flask import Flask
 import json
 
-DATA_FILE = "user_data.json"
+DATA_FILE = "Server/user_data.json"
+
+authorized_user_id = 971538245320081508
 
 # Load environment variables from .env file
 load_dotenv()
@@ -49,26 +50,15 @@ daily_update_times = {}
 format_preferences = {}
 
 
-
-# Open port for Render
-app = Flask(__name__)
-
-
-@app.route('/')
-def home():
-    return "Hello, this is the weather bot!"
-
-if __name__ == "__main__":
-    port = int(os.getenv('PORT'))
-    app.run(host='0.0.0.0', port=port)
-
-#Read/Write for the json file
 def read_data():
     try:
         with open(DATA_FILE, 'r') as file:
             return json.load(file)
     except FileNotFoundError:
         return {}
+    except json.JSONDecodeError:
+        return {}
+
 
 def write_data(data):
     with open(DATA_FILE, 'w') as file:
@@ -548,6 +538,26 @@ async def smiley_command(ctx:discord.Interaction):
     await ctx.response.defer()
 
     await ctx.followup.send("😁")
+
+@tree.command(name="updatebot", description="Update bot data from JSON")
+async def update_bot(ctx: discord.Interaction):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    if user_id == str(authorized_user_id):
+        try:
+            with open(DATA_FILE, 'r') as file:
+                global data
+                data = json.load(file)
+                await ctx.followup.send("Bot data updated successfully from JSON.")
+        except FileNotFoundError:
+            await ctx.followup.send("JSON file not found.")
+        except json.JSONDecodeError:
+            await ctx.followup.send("Error decoding JSON... Creating empty dictionairy")
+            data = {}
+            await ctx.channel.send("Data = \{\}")
+    else:
+        await ctx.followup.send("You are not authorized to use this command.")
 
 
 @tasks.loop(hours=24)
