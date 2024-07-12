@@ -18,8 +18,13 @@ import datetime
 from dotenv import load_dotenv
 import os
 import json
+import logging
 
-DATA_FILE = "Server/user_data.json"
+# Define the base directory as the directory where the script is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Define the path to the data file
+DATA_FILE = os.path.join(BASE_DIR, '../Server/user_data.json')
 
 authorized_user_id = 971538245320081508
 
@@ -29,6 +34,8 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENWEATHERMAP_API_KEY = os.getenv('OPENWEATHERMAP_API_KEY')
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Create an instance of Intents
 intents = discord.Intents.default()
@@ -294,9 +301,10 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
                 await ctx.followup.send(embed=embed)
             return
 
-    # Call OpenWeatherMap One Call API
+    # Call OpenWeatherMap Geocoding API
     geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
     geocoding_response = requests.get(geocoding_api_url)
+    logging.info(f"Geocoding API response: {geocoding_response.text}")
     geocoding_data = geocoding_response.json()
 
     if geocoding_response.status_code != 200 or not geocoding_data:
@@ -312,6 +320,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     lon = geocoding_data[0]['lon']
     forecast_api_url = f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&appid={OPENWEATHERMAP_API_KEY}'
     response = requests.get(forecast_api_url)
+    logging.info(f"Forecast API response: {response.text}")
     forecast_data = response.json()
 
     # Check if the API request was successful
