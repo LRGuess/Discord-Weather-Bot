@@ -349,7 +349,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
-    with open('user_data.json', 'w') as f:
+    with open('Server/user_data.json', 'w') as f:
         json.dump(data, f)
 
 # Command to get sunrise and sunset times
@@ -413,7 +413,7 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
-    with open('user_data.json', 'w') as f:
+    with open('Server/user_data.json', 'w') as f:
         json.dump(data, f)
 
 # Command to get weather alerts for a location
@@ -475,7 +475,7 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
-    with open('user_data.json', 'w') as f:
+    with open('Server/user_data.json', 'w') as f:
         json.dump(data, f)
 
 # Command to set message format preference
