@@ -11,6 +11,7 @@ You may not distribute or modify this script without proper credit to K-Bean Stu
 """
 import discord
 from discord import app_commands
+from discord.ui import Select, View
 from discord.ext import tasks
 import pytz
 import requests
@@ -79,6 +80,48 @@ def convert_to_local_time(timestamp, timezone):
     utc_time = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
     local_time = utc_time.astimezone(pytz.timezone(timezone))
     return local_time.strftime('%Y-%m-%d %H:%M:%S')
+
+
+class WeatherView(View):
+    def __init__(self, forecast_data, location):
+        super().__init__(timeout=None)
+        self.forecast_data = forecast_data
+        self.location = location
+
+        options = []
+        for forecast in forecast_data:
+            date = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d')
+            if date not in [option.value for option in options]:
+                options.append(discord.SelectOption(label=date, value=date))
+
+        self.add_item(WeatherSelect(options, self.forecast_data, self.location))
+
+class WeatherSelect(Select):
+    def __init__(self, options, forecast_data, location):
+        super().__init__(placeholder="Choose a date", options=options)
+        self.forecast_data = forecast_data
+        self.location = location
+
+    async def callback(self, interaction: discord.Interaction):
+        date_selected = self.values[0]
+        forecast_message = f'Weather forecast for {self.location} on {date_selected}:\n'
+        for forecast in self.forecast_data:
+            date = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d')
+            if date == date_selected:
+                dt_txt = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d %H:%M:%S')
+                temperature = forecast['temp']['day'] - 273.15
+                description = forecast['weather'][0]['description']
+
+                # Convert temperature to the user's preferred unit
+                user_id = str(interaction.user.id)
+                user_data = data.get(user_id, {})
+                if user_data.get('unit') == 'F':
+                    temperature = (temperature * 9/5) + 32
+
+                forecast_message += f'{dt_txt}: Temp: {temperature:.2f}°{"F" if user_data.get("unit") == "F" else "C"}, Weather: {description}\n'
+
+        embed = discord.Embed(title=f"Forecast for {date_selected}", description=forecast_message)
+        await interaction.response.edit_message(embed=embed, view=self.view)
 
 
 # Command to get the weather
@@ -304,7 +347,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     # Call OpenWeatherMap Geocoding API
     geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
     geocoding_response = requests.get(geocoding_api_url)
-    logging.info(f"Geocoding API response: {geocoding_response.text}")
+    logging.info(f"Geocoding API URL: {geocoding_api_url}")
     geocoding_data = geocoding_response.json()
 
     if geocoding_response.status_code != 200 or not geocoding_data:
@@ -318,37 +361,33 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
 
     lat = geocoding_data[0]['lat']
     lon = geocoding_data[0]['lon']
-    forecast_api_url = f'https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&appid={OPENWEATHERMAP_API_KEY}'
+    forecast_api_url = f'http://api.openweathermap.org/data/2.5/forecast/daily?lat={lat}&lon={lon}&cnt=16&appid={OPENWEATHERMAP_API_KEY}'
     response = requests.get(forecast_api_url)
-    logging.info(f"Forecast API response: {response.text}")
+    logging.info(f"Forecast API URL: {forecast_api_url}")
     forecast_data = response.json()
 
     # Check if the API request was successful
     if response.status_code == 200:
-        # Extract the daily forecast
-        daily_forecast = forecast_data['daily']
-
-        # Display the forecast for the next few days
-        forecast_message = f'Weather forecast for {location}:\n'
-        for day in daily_forecast:
-            date = datetime.datetime.fromtimestamp(day['dt']).strftime('%Y-%m-%d')
-            temperature_min = day['temp']['min'] - 273.15
-            temperature_max = day['temp']['max'] - 273.15
-            description = day['weather'][0]['description']
-
-            # Convert temperature to the user's preferred unit
-            if user_data.get('unit') == 'F':
-                temperature_min = (temperature_min * 9/5) + 32
-                temperature_max = (temperature_max * 9/5) + 32
-
-            forecast_message += f'{date}: Min Temp: {temperature_min:.2f}°{"F" if user_data.get("unit") == "F" else "C"}, Max Temp: {temperature_max:.2f}°{"F" if user_data.get("unit") == "F" else "C"}, Weather: {description}\n'
+        # Extract the forecast data
+        forecast_list = forecast_data['list']
 
         # Send the forecast information to the Discord channel
         if format_preference.lower() == 'plain':
+            forecast_message = f'Weather forecast for {location}:\n'
+            for forecast in forecast_list:
+                dt_txt = forecast['dt']
+                temperature = forecast['temp']['day'] - 273.15
+                description = forecast['weather'][0]['description']
+
+                # Convert temperature to the user's preferred unit
+                if user_data.get('unit') == 'F':
+                    temperature = (temperature * 9/5) + 32
+
+                forecast_message += f'{dt_txt}: Temp: {temperature:.2f}°{"F" if user_data.get("unit") == "F" else "C"}, Weather: {description}\n'
             await ctx.followup.send(forecast_message)
         else:
-            embed = discord.Embed(title="Forecast", description=forecast_message)
-            await ctx.followup.send(embed=embed)
+            view = WeatherView(forecast_list, location)
+            await ctx.followup.send("Select a date to view the weather forecast:", view=view)
     else:
         error_message = f"Unable to fetch weather forecast for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
@@ -360,6 +399,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     # Save the user data to the file
     with open('Server/user_data.json', 'w') as f:
         json.dump(data, f)
+
 
 # Command to get sunrise and sunset times
 @tree.command(name="suntimes", description="Get sunrise and sunset times for a location")
