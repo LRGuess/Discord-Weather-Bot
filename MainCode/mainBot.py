@@ -401,7 +401,7 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         await ctx.response.defer()
 
         user_id = str(ctx.user.id)
-        with open('Server/user_data.json', 'r') as f:
+        with open(DATA_FILE, 'r') as f:
             data = json.load(f)
         
         user_data = data.get(user_id, {})
