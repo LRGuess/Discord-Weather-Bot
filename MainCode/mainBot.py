@@ -12,7 +12,7 @@ You may not distribute or modify this script without proper credit to K-Bean Stu
 import discord
 from discord import app_commands
 from discord.ui import Select, View
-from discord.ext import tasks
+from discord.ext import tasks, commands
 import pytz
 import requests
 import datetime
@@ -39,8 +39,7 @@ OPENWEATHERMAP_API_KEY = os.getenv('OPENWEATHERMAP_API_KEY')
 intents = discord.Intents.default()
 
 # Create an instance of the bot
-client = discord.Client(intents=intents)
-tree = app_commands.CommandTree(client)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Dictionary to store user default locations (user_id: location)
 default_locations = {}
@@ -111,7 +110,7 @@ class DateSelect(discord.ui.Select):
         await interaction.response.edit_message(content=forecast_message, view=None)
 
 # Command to get the weather
-@tree.command(name="weather", description="Get the current weather for a location")
+@bot.tree.command(name="weather", description="Get the current weather for a location")
 async def get_weather(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
@@ -155,7 +154,7 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
         await ctx.followup.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
 
 # Command to set a default location
-@tree.command(name="setlocation", description="Set a default location for weather updates")
+@bot.tree.command(name="setlocation", description="Set a default location for weather updates")
 async def set_location(ctx: discord.Interaction, *, location: str):
     await ctx.response.defer()
 
@@ -175,7 +174,7 @@ async def set_location(ctx: discord.Interaction, *, location: str):
         await ctx.followup.send(embed=embed)
 
 # Command to set a default temperature unit
-@tree.command(name="setunit", description="Set a default temperature unit (C or F)")
+@bot.tree.command(name="setunit", description="Set a default temperature unit (C or F)")
 async def set_unit(ctx: discord.Interaction, unit: str):
     await ctx.response.defer()
 
@@ -203,7 +202,7 @@ async def set_unit(ctx: discord.Interaction, unit: str):
             await ctx.followup.send(embed=embed)
 
 # Command to set a daily update time
-@tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
+@bot.tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
 async def set_daily_update(ctx: discord.Interaction, time: str):
     await ctx.response.defer()
 
@@ -232,7 +231,7 @@ async def set_daily_update(ctx: discord.Interaction, time: str):
             await ctx.followup.send(embed=embed)
 
 # Command to get the wind information
-@tree.command(name="wind", description="Get the wind information for a location")
+@bot.tree.command(name="wind", description="Get the wind information for a location")
 async def get_wind(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
@@ -272,7 +271,7 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
 
 # Command to get the humidity information
-@tree.command(name="humidity", description="Get the humidity information for a location")
+@bot.tree.command(name="humidity", description="Get the humidity information for a location")
 async def get_humidity(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
@@ -311,7 +310,7 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
 
 # Command to get the weather forecast
-@tree.command(name="forecast", description="Get the weather forecast for a location")
+@bot.tree.command(name="forecast", description="Get the weather forecast for a location")
 async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
@@ -368,7 +367,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
 
 
 # Command to get weather alerts for a location
-@tree.command(name="alerts", description="Get weather alerts for a location")
+@bot.tree.command(name="alerts", description="Get weather alerts for a location")
 async def get_alerts(ctx: discord.Interaction, *, location: str = None):    
     await ctx.response.defer()
 
@@ -430,7 +429,7 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
         json.dump(data, f)
 
 # Command to set message format preference
-@tree.command(name="format", description="Choose message format (embed/plain)")
+@bot.tree.command(name="format", description="Choose message format (embed/plain)")
 async def format_message(ctx: discord.Interaction, message_format: str):
     await ctx.response.defer()
 
@@ -448,7 +447,7 @@ async def format_message(ctx: discord.Interaction, message_format: str):
         await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
 
 # Command to get information about the weather bot
-@tree.command(name="weatherbotabout", description="Get information about the weather bot")
+@bot.tree.command(name="weatherbotabout", description="Get information about the weather bot")
 async def info_command(ctx: discord.Interaction):
     await ctx.response.defer()
 
@@ -467,7 +466,7 @@ async def info_command(ctx: discord.Interaction):
         await ctx.followup.send(embed=embed)
 
 # Command to get a full list of commands
-@tree.command(name="weatherbothelp", description="Full list of commands")
+@bot.tree.command(name="weatherbothelp", description="Full list of commands")
 async def help_command(ctx:discord.Interaction):
     await ctx.response.defer()
 
@@ -484,13 +483,13 @@ async def help_command(ctx:discord.Interaction):
         await ctx.followup.send(embed=embed)
 
 # Command to send a smiley face
-@tree.command(name="smiley", description="Send a smiley face haha")
+@bot.tree.command(name="smiley", description="Send a smiley face haha")
 async def smiley_command(ctx:discord.Interaction):
     await ctx.response.defer()
 
     await ctx.followup.send("😁")
 
-@tree.command(name="updatebot", description="Update bot data from JSON")
+@bot.tree.command(name="updatebot", description="Update bot data from JSON")
 async def update_bot(ctx: discord.Interaction):
     await ctx.response.defer()
 
@@ -541,7 +540,7 @@ async def send_daily_updates():
                         temperature = (temperature * 9/5) + 32
 
                     # Get the user's DM channel
-                    user = client.get_user(int(user_id))
+                    user = bot.get_user(int(user_id))
                     if user:
                         # Send the daily weather update
                         await user.send(f'Daily weather update for {location}: {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if unit == "F" else "C"}.')
@@ -550,15 +549,15 @@ async def send_daily_updates():
                     # Log the error or handle it as needed
 
 # Event to print a message when the bot is ready
-@client.event
+@bot.event
 async def on_ready():
     send_daily_updates.start()
-    await tree.sync()
-    print(f'{client.user.name} has connected to Discord!')
+    await bot.tree.sync()
+    print(f'{bot.user.name} has connected to Discord!')
 
-@client.event
+@bot.event
 async def on_disconnect():
     write_data(data)
 
 # Run the bot
-client.run(DISCORD_TOKEN, reconnect=True)
+bot.run(DISCORD_TOKEN, reconnect=True)
