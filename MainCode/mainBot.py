@@ -391,7 +391,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
             embed = discord.Embed(title="Forecast error", description=error_message)
             await ctx.followup.send(embed=embed)
 
-    with open('Server/user_data.json', 'w') as f:
+    with open(DATA_FILE, 'w') as f:
         json.dump(data, f)
 
 
@@ -471,7 +471,7 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
                 await ctx.followup.send(embed=embed)
 
         # Save the user data to the file
-        with open('Server/user_data.json', 'w') as f:
+        with open(DATA_FILE, 'w') as f:
             json.dump(data, f)
 
 # Command to get weather alerts for a location
@@ -533,7 +533,7 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
-    with open('Server/user_data.json', 'w') as f:
+    with open(DATA_FILE, 'w') as f:
         json.dump(data, f)
 
 # Command to set message format preference
