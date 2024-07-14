@@ -76,7 +76,36 @@ def convert_to_local_time(timestamp, timezone):
     utc_time = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
     local_time = utc_time.astimezone(pytz.timezone(timezone))
     return local_time.strftime('%Y-%m-%d %H:%M:%S')
+class DateSelectView16(discord.ui.View):
+    def __init__(self, forecast_list, location):
+        super().__init__(timeout=None)
+        self.forecast_list = forecast_list
+        self.location = location
 
+        # Create a unique and sorted set of dates
+        unique_dates = sorted({datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d') for forecast in forecast_list})
+
+        options = [discord.SelectOption(label=date) for date in unique_dates]
+        self.add_item(DateSelect16(options, forecast_list, location))
+
+class DateSelect16(discord.ui.Select):
+    def __init__(self, options, forecast_list, location):
+        super().__init__(placeholder="Choose a date", min_values=1, max_values=1, options=options)
+        self.forecast_list = forecast_list
+        self.location = location
+
+    async def callback(self, interaction: discord.Interaction):
+        selected_date = self.values[0]
+        forecasts_for_date = [forecast for forecast in self.forecast_list if datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d') == selected_date]
+        
+        forecast_message = f'Forecast for {selected_date}\n\n'
+        for forecast in forecasts_for_date:
+            forecast_time = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%H:%M:%S')
+            temperature = forecast['temp']['day'] - 273.15
+            description = forecast['weather'][0]['description']
+            forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°C, Weather: {description}\n'
+
+        await interaction.response.edit_message(content=forecast_message, view=None)
 
 class DateSelectView(discord.ui.View):
     def __init__(self, forecast_list, location):
@@ -365,6 +394,85 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     with open('Server/user_data.json', 'w') as f:
         json.dump(data, f)
 
+
+# Command to get a 16-day forecast
+@bot.tree.command(name="16dayforecast", description="Get a 16-day faorcast without ")
+async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
+        await ctx.response.defer()
+
+        user_id = str(ctx.user.id)
+        with open('Server/user_data.json', 'r') as f:
+            data = json.load(f)
+        
+        user_data = data.get(user_id, {})
+        format_preference = user_data.get('format', 'embed')
+
+        if location is None:
+            location = user_data.get('location')
+            if location is None:
+                error_message = "Please provide a location or set a default location using /setlocation."
+                if format_preference.lower() == 'plain':
+                    await ctx.followup.send(error_message)
+                else:
+                    embed = discord.Embed(title="Location error", description=error_message)
+                    await ctx.followup.send(embed=embed)
+                return
+
+        # Call OpenWeatherMap Geocoding API
+        geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+        geocoding_response = requests.get(geocoding_api_url)
+        geocoding_data = geocoding_response.json()
+
+        if geocoding_response.status_code != 200 or not geocoding_data:
+            error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send(error_message)
+            else:
+                embed = discord.Embed(title="Geocoding error", description=error_message)
+                await ctx.followup.send(embed=embed)
+            return
+
+        lat = geocoding_data[0]['lat']
+        lon = geocoding_data[0]['lon']
+
+        forecast_api_url = f'http://api.openweathermap.org/data/2.5/forecast/daily?lat={lat}&lon={lon}&cnt=16&appid={OPENWEATHERMAP_API_KEY}'
+
+        response = requests.get(forecast_api_url)
+        forecast_data = response.json()
+
+        # Check if the API request was successful
+        if response.status_code == 200:
+            # Extract the forecast data
+            forecast_list = forecast_data['list']
+
+            # Format the forecast information
+            if format_preference.lower() == 'plain':
+                forecast_message = f'16-day weather forecast for {location}:\n'
+                for forecast in forecast_list:
+                    forecast_date = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d')
+                    temperature = forecast['temp']['day'] - 273.15
+                    description = forecast['weather'][0]['description']
+
+                    # Convert temperature to the user's preferred unit
+                    if user_data.get('unit') == 'F':
+                        temperature = (temperature * 9/5) + 32
+
+                    forecast_message += f'{forecast_date}: Temp: {temperature:.2f}°{"F" if user_data.get("unit") == "F" else "C"}, Weather: {description}\n'
+                await ctx.followup.send(forecast_message)
+            else:
+                view = DateSelectView16(forecast_list, location)
+                await ctx.followup.send("Select a date to view the weather forecast:", view=view)
+        else:
+            error_message = f"Unable to fetch weather forecast for {location}. Please check the location and try again."
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send(error_message)
+            else:
+                embed = discord.Embed(title="Forecast error", description=error_message)
+                await ctx.followup.send(embed=embed)
+
+        # Save the user data to the file
+        with open('Server/user_data.json', 'w') as f:
+            json.dump(data, f)
 
 # Command to get weather alerts for a location
 @bot.tree.command(name="alerts", description="Get weather alerts for a location")
