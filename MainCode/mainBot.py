@@ -564,7 +564,7 @@ async def info_command(ctx: discord.Interaction):
     format_preference = user_data.get('format', 'embed')
 
     # Provide a brief description of the bot
-    description = "A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: https://kbeanstudios.ca/discordweatherbot. You can also run /help"
+    description = "A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: https://kbeanstudios.ca/discordweatherbot. You can also run /help \n \n **Version:** 4.5.1"
 
     # Send the bot information to the Discord channel
     if format_preference.lower() == 'plain':
@@ -582,7 +582,7 @@ async def help_command(ctx:discord.Interaction):
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
 
-    commandlist = "/weather [location] provides weather for specified location \n /forecast [location] Retrieve a multi-day weather forecast for the specified location \n /setlocation [location] Set your default location for weather updates \n /setunit [F or C] Choose between Celsius and Fahrenheit for temperature units \n /dailyupdate [time] Receive a daily weather update at the specified time \n /wind [location] Get detailed information about the wind conditions at a specific location \n /humidity [location] Check the current humidity level for a given location \n /suntimes [location] Find out the sunrise and sunset times for a particular location \n /alerts [location] Receive any weather alerts or warnings for the specified location \n /format [embed/plain] Choose between an embedded or plain text format for weather responses \n /weatherbotinfo Get information about WeatherBot, including version and support details"
+    commandlist = "**/weather** [location] provides weather 🌥 for specified location \n \n **/forecast** [location] Retrieve a 5-day 3-hour weather forecast for the specified location 📰 \n \n **/16dayforecast** [location] Retrieve a 16-day weather forecast for the specified location 📃 \n \n **/setlocation** [location] Set your default location for weather updates 📍 \n \n **/setunit** [F or C] Choose between Celsius and FreedomUnits for temperature units 🍁 or 🦅 \n \n **/dailyupdate** [time] Receive a daily weather update at the specified time ⏰ \n \n **/wind** [location] Get detailed information about the wind conditions at a specific location 💨 \n \n **/humidity** [location] Check the current humidity level for a given location 💧 \n \n **/suntimes**[location] Find out the sunrise and sunset times for a particular location 🌞 \n \n **/alerts** [location] Receive any weather alerts or warnings for the specified location ‼ \n \n **/format** [embed/plain] Choose between an embedded or plain text format for weather responses 📜 \n \n **/weatherbotabout** Get information about WeatherBot, including version and support details"
 
     if format_preference.lower() == 'plain':
         await ctx.followup.send(commandlist)
