@@ -208,6 +208,7 @@ async def set_unit(ctx: discord.Interaction, unit: str):
     await ctx.response.defer()
 
     user_id = str(ctx.user.id)
+    format_preference = data[user_id].get('format', 'embed')
     unit = unit.upper()
 
     if user_id not in data:
@@ -216,12 +217,33 @@ async def set_unit(ctx: discord.Interaction, unit: str):
     if unit in ['C', 'F']:
         data[user_id]['unit'] = unit
         write_data(data)
-        format_preference = data[user_id].get('format', 'embed')
 
         if format_preference.lower() == 'plain':
             await ctx.followup.send(f'Default temperature unit set to {unit}.')
         else:
             embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to {unit}.')
+            await ctx.followup.send(embed=embed)
+            
+    elif unit == "🦅":
+
+        data[user_id]['unit'] = 'F'
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to Freedom Units.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
+            await ctx.followup.send(embed=embed)
+
+    elif unit.lower() == "freedom" :
+
+        data[user_id]['unit'] = 'F'
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to Freedom Units.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
