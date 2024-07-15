@@ -245,6 +245,18 @@ async def set_unit(ctx: discord.Interaction, unit: str):
         else:
             embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
             await ctx.followup.send(embed=embed)
+
+    elif unit.lower() == "logical" :
+
+        data[user_id]['unit'] = 'C'
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to Logical.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Logical.')
+            await ctx.followup.send(embed=embed)
+
     else:
         if format_preference.lower() == 'plain':
             await ctx.followup.send('Invalid unit. Please use C or F.')
