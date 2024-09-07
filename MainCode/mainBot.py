@@ -508,6 +508,71 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f)
 
+# Command to get air quality for a location
+@bot.tree.command(name="airquality", description="Get the air quatity for a location")
+async def get_air_quality(ctx: discord.Interaction, *, location: str = None, details: bool = False):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = user_data.get('location')
+        if location is None:
+            error_message = "Please provide a location or set a default location using /setlocation."
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send(error_message)
+            else:
+                embed = discord.Embed(title="Location error", description=error_message)
+                await ctx.followup.send(embed=embed)
+            return
+    
+    # Call OpenWeatherMap Geocoding API
+    geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    geocoding_response = requests.get(geocoding_api_url)
+    geocoding_data = geocoding_response.json()
+
+    if geocoding_response.status_code != 200 or not geocoding_data:
+        error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(error_message)
+        else:
+            embed = discord.Embed(title="Geocoding error", description=error_message)
+            await ctx.followup.send(embed=embed)
+        return
+
+    lat = geocoding_data[0]['lat']
+    lon = geocoding_data[0]['lon']
+
+    air_quality_api_url = f'http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={OPENWEATHERMAP_API_KEY}'
+
+    response = requests.get(air_quality_api_url)
+    air_quality_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        so2 = air_quality_data['list'][0]['components']['so2']
+        no2 = air_quality_data['list'][0]['components']['no2']
+        pm10 = air_quality_data['list'][0]['components']['pm10']
+        pm2_5 = air_quality_data['list'][0]['components']['pm2_5']
+        o3 = air_quality_data['list'][0]['components']['o3']
+        co = air_quality_data['list'][0]['components']['co']
+        
+
+    else:
+        error_message = f"Unable to fetch air quality for {location}. Please check the location and try again."
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(error_message)
+        else:
+            embed = discord.Embed(title="Forecast error", description=error_message)
+            await ctx.followup.send(embed=embed)
+
+    # Save the user data to the file
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f)
+
+    
 # Command to get weather alerts for a location
 @bot.tree.command(name="alerts", description="Get weather alerts for a location")
 async def get_alerts(ctx: discord.Interaction, *, location: str = None):    
