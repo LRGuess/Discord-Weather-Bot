@@ -372,7 +372,7 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
             embed = discord.Embed(title="Error", description=f"Unable to fetch humidity information for {location}. Please check the location and try again.")
             await ctx.followup.send(embed=embed)
 
-# Command to get the weather forecast
+# Command to get the weather forecast, this is 5 days every 3 hours
 @bot.tree.command(name="forecast", description="Get the weather forecast for a location")
 async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
