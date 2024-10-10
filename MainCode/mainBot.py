@@ -14,6 +14,7 @@ from discord import app_commands
 from discord.ui import Select, View
 from discord.ext import tasks, commands
 import pytz
+from pytz import all_timezones
 import requests
 import datetime
 from dotenv import load_dotenv
@@ -84,6 +85,11 @@ def get_qualitative_name(index):
     names = [":green_circle: Good", ":orange_circle: Fair", ":yellow_circle: Moderate", ":red_circle: Poor", " :purple_circle: Very Poor"]
     return names[index - 1]
 
+# Generate a list of all available time zones from pytz
+timezones_list = pytz.all_timezones
+
+# Set to track users who have received the update in the current minute
+sent_updates = set()
 
 def read_data():
     try:
@@ -295,35 +301,6 @@ async def set_unit(ctx: discord.Interaction, unit: str):
             embed = discord.Embed(title='Unit invalid', description='Invalid unit. Please use C or F.')
             await ctx.followup.send(embed=embed)
 
-# Command to set a daily update time
-@bot.tree.command(name="dailyupdate", description="Set a specific time for daily weather updates")
-async def set_daily_update(ctx: discord.Interaction, time: str):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    user_data = data.get(user_id, {})
-    format_preference = user_data.get('format', 'embed')
-
-    try:
-        update_time = datetime.datetime.strptime(time, '%H:%M').time()
-
-        user_data['daily_update_time'] = time
-        data[user_id] = user_data
-        write_data(data)
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'Daily weather update time set to {time}.')
-        else:
-            embed = discord.Embed(title='Time set', description=f'Daily weather update time set to {time}.')
-            await ctx.followup.send(embed=embed)
-
-    except ValueError:
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send('Invalid time format. Please use HH:MM.')
-        else:
-            embed = discord.Embed(title='Invalid format', description='Invalid time format. Please use HH:MM.')
-            await ctx.followup.send(embed=embed)
-
 # Command to get the wind information
 @bot.tree.command(name="wind", description="Get the wind information for a location")
 async def get_wind(ctx: discord.Interaction, *, location: str = None):
@@ -403,7 +380,7 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
             embed = discord.Embed(title="Error", description=f"Unable to fetch humidity information for {location}. Please check the location and try again.")
             await ctx.followup.send(embed=embed)
 
-# Command to get the weather forecast
+# Command to get the weather forecast, this is 5 days every 3 hours
 @bot.tree.command(name="forecast", description="Get the weather forecast for a location")
 async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
@@ -783,46 +760,135 @@ async def update_bot(ctx: discord.Interaction):
             await ctx.channel.send("Data = \{\}")
     else:
         await ctx.followup.send("You are not authorized to use this command.")
+        
+# Command to set a daily update time with timezone and AM/PM option
+@bot.tree.command(name="dailyupdate", description="Set a specific time for daily weather updates, choose AM/PM, and select a timezone")
+async def set_daily_update(ctx: discord.Interaction, time: str, am_pm: str, timezone: str):
+    await ctx.response.defer()
 
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
 
-@tasks.loop(hours=24)
+    # Parse the time in 12-hour format with AM/PM
+    try:
+        time_string = f'{time} {am_pm.upper()}'
+        update_time = datetime.datetime.strptime(time_string, '%I:%M %p').time()
+    except ValueError:
+        await ctx.followup.send('Invalid time format. Please use HH:MM and AM/PM.')
+        return
+
+    # Validate the selected timezone
+    if timezone not in all_timezones:
+        await ctx.followup.send(f'Invalid timezone. Please select a valid timezone.')
+        return
+
+    # Save the update time, AM/PM option, and timezone
+    user_data['daily_update_time'] = update_time.strftime('%H:%M')
+    user_data['timezone'] = timezone
+    user_data['am_pm'] = am_pm.upper()
+    data[user_id] = user_data
+    write_data(data)
+
+    await ctx.followup.send(f'Daily weather update time set to {time} {am_pm.upper()} in {timezone}.')
+
+# Autocomplete function for timezones
+@set_daily_update.autocomplete('timezone')
+async def timezone_autocomplete(interaction: discord.Interaction, current: str):
+    # Provide a list of timezones that match the user's input globally
+    matching_timezones = [tz for tz in all_timezones if tz.lower().startswith(current.lower())]
+    # Return up to 25 matching timezones globally
+    return [discord.app_commands.Choice(name=tz, value=tz) for tz in matching_timezones[:25]]
+
+# Command to turn off daily updates
+@bot.tree.command(name="disableupdates", description="Turn off daily weather updates")
+async def disable_daily_update(ctx: discord.Interaction):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+
+    if 'daily_update_time' in user_data:
+        del user_data['daily_update_time']
+        del user_data['timezone']
+        data[user_id] = user_data
+        write_data(data)
+        await ctx.followup.send('Daily weather updates have been turned off.')
+    else:
+        await ctx.followup.send('No daily update is set.')
+
+@tasks.loop(seconds=45)
 async def send_daily_updates():
-    current_time = datetime.datetime.now().time()
+    current_utc_time = datetime.datetime.utcnow().time()
+    current_minute = current_utc_time.minute
+    for user_id, user_data in data.items():
+        try:
+            update_time = datetime.datetime.strptime(user_data['daily_update_time'], '%H:%M').time()
+            user_tz = pytz.timezone(user_data['timezone'])
+            user_local_time = user_tz.localize(datetime.datetime.combine(datetime.date.today(), update_time))
+            user_utc_time = user_local_time.astimezone(pytz.utc).time()
 
-    for user_id, update_time in daily_update_times.items():
-        if current_time.hour == update_time.hour and current_time.minute == update_time.minute:
-            user_id_str = str(user_id)
+            print(f"Checking updates for user {user_id}:")
+            print(f"Current UTC time: {current_utc_time}")
+            print(f"User's local time: {user_local_time}")
+            print(f"User's UTC time: {user_utc_time}")
 
-            # Get the user's default location
-            location = data.get(user_id_str, {}).get('location')
+            # If it's the correct time for the user and the update hasn't been sent yet, send the update
+            if current_utc_time.hour == user_utc_time.hour and current_utc_time.minute == user_utc_time.minute:
+                if user_id not in sent_updates:
+                    location = user_data.get('location')
 
-            if location:
-                # Call OpenWeatherMap API
-                weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
-                response = requests.get(weather_api_url)
-                weather_data = response.json()
+                    if location:
+                        # Fetch weather data (assuming the API part is correct)
+                        weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+                        response = requests.get(weather_api_url)
+                        weather_data = response.json()
 
-                # Check if the API request was successful
-                if response.status_code == 200:
-                    # Extract relevant weather information
-                    main_weather = weather_data['weather'][0]['main']
-                    description = weather_data['weather'][0]['description']
-                    temperature = weather_data['main']['temp']
+                        if response.status_code == 200:
+                            main_weather = weather_data['weather'][0]['main']
+                            description = weather_data['weather'][0]['description']
+                            temperature = weather_data['main']['temp']
+                            unit = user_data.get('unit', 'C')
 
-                    # Convert temperature to the user's preferred unit
-                    unit = data.get(user_id_str, {}).get('unit', 'C')
-                    if unit == 'F':
-                        temperature = (temperature * 9/5) + 32
+                            if unit == 'F':
+                                temperature = (temperature * 9/5) + 32
 
-                    # Get the user's DM channel
-                    user = bot.get_user(int(user_id))
-                    if user:
-                        # Send the daily weather update
-                        await user.send(f'Daily weather update for {location}: {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if unit == "F" else "C"}.')
-                else:
-                    print(f"Unable to fetch daily weather update for {location}.")
-                    # Log the error or handle it as needed
+                            user = await bot.fetch_user(int(user_id))
+                            if user:
+                                print(f"User {user_id} found: {user}")
+                                # Send DM to the user
+                                try:
+                                    channel = await user.create_dm()
+                                    await channel.send(f'Daily weather update for {location}: {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if unit == "F" else "C"}.')
+                                    print(f"Sent update to user {user_id}")
+                                    sent_updates.add(user_id)
+                                except discord.Forbidden:
+                                    print(f"Bot does not have permission to send DMs to user {user_id}")
+                            else:
+                                print(f"User {user_id} not found.")
+                        else:
+                            print(f"Unable to fetch daily weather update for {location}.")
+                    else:
+                        print(f"No location found for user {user_id}.")
+        except Exception as e:
+            print(f"Error processing updates for user {user_id}: {e}")
 
+    # Clear the set of sent updates if the minute has changed
+    if current_utc_time.minute != current_minute:
+        sent_updates.clear()
+      
+# Event to print a message when the bot is ready
+@bot.event
+async def on_ready():
+    send_daily_updates.start()
+    await bot.tree.sync()
+    print(f'{bot.user.name} has connected to Discord!')
+
+@bot.event
+async def on_disconnect():
+    write_data(data)
+
+# Run the bot
+bot.run(DISCORD_TOKEN, reconnect=True)
 # Event to print a message when the bot is ready
 @bot.event
 async def on_ready():
