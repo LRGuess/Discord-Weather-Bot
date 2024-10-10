@@ -53,6 +53,37 @@ daily_update_times = {}
 # Dictionary to store format preferences for each user
 format_preferences = {}
 
+# Function to determine the air quality index for a given pollutant concentration
+def get_air_quality_index(concentration, ranges):
+    for index, (low, high) in enumerate(ranges, start=1):
+        if low <= concentration < high:
+            return index
+    return len(ranges) + 1  # Return the highest index if concentration exceeds all ranges
+
+# Define the ranges for each pollutant
+SO2_RANGES = [(0, 20), (20, 80), (80, 250), (250, 350), (350, float('inf'))]
+NO2_RANGES = [(0, 40), (40, 70), (70, 150), (150, 200), (200, float('inf'))]
+PM10_RANGES = [(0, 20), (20, 50), (50, 100), (100, 200), (200, float('inf'))]
+PM2_5_RANGES = [(0, 10), (10, 25), (25, 50), (50, 75), (75, float('inf'))]
+O3_RANGES = [(0, 60), (60, 100), (100, 140), (140, 180), (180, float('inf'))]
+CO_RANGES = [(0, 4400), (4400, 9400), (9400, 12400), (12400, 15400), (15400, float('inf'))]
+
+# Function to calculate the overall air quality index
+def calculate_air_quality_index(so2, no2, pm10, pm2_5, o3, co):
+    so2_index = get_air_quality_index(so2, SO2_RANGES)
+    no2_index = get_air_quality_index(no2, NO2_RANGES)
+    pm10_index = get_air_quality_index(pm10, PM10_RANGES)
+    pm2_5_index = get_air_quality_index(pm2_5, PM2_5_RANGES)
+    o3_index = get_air_quality_index(o3, O3_RANGES)
+    co_index = get_air_quality_index(co, CO_RANGES)
+    
+    return max(so2_index, no2_index, pm10_index, pm2_5_index, o3_index, co_index)
+
+# Function to get the qualitative name based on the index
+def get_qualitative_name(index):
+    names = [":green_circle: Good", ":orange_circle: Fair", ":yellow_circle: Moderate", ":red_circle: Poor", " :purple_circle: Very Poor"]
+    return names[index - 1]
+
 
 def read_data():
     try:
@@ -558,8 +589,30 @@ async def get_air_quality(ctx: discord.Interaction, *, location: str = None, det
         pm2_5 = air_quality_data['list'][0]['components']['pm2_5']
         o3 = air_quality_data['list'][0]['components']['o3']
         co = air_quality_data['list'][0]['components']['co']
-        
 
+        air_quality_index = calculate_air_quality_index(so2, no2, pm10, pm2_5, o3, co)
+        qualitative_name = get_qualitative_name(air_quality_index)
+
+        if details:
+            air_quality_message = (
+                f"Air Quality Index: **{air_quality_index}** | {qualitative_name}\n\n"
+                f"SO2: {so2} μg/m³\n"
+                f"NO2: {no2} μg/m³\n"
+                f"PM10: {pm10} μg/m³\n"
+                f"PM2.5: {pm2_5} μg/m³\n"
+                f"O3: {o3} μg/m³\n"
+                f"CO: {co} μg/m³"
+            )
+        else:
+            air_quality_message = (
+                f"Air Quality Index: **{air_quality_index}** | {qualitative_name}"
+            )
+        
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(air_quality_message)
+        else:
+            embed = discord.Embed(title="Air Quality", description=air_quality_message)
+            await ctx.followup.send(embed=embed)
     else:
         error_message = f"Unable to fetch air quality for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
