@@ -690,7 +690,11 @@ async def bug_report(ctx: discord.Interaction):
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
     # Bug report text
-    description = "If you have a bug report or feature request, please join the discord! \n https://discord.gg/ZxgqU6MhTT \n\n You can also email \n kbeanstudios@gmail.com"
+    description = (f"If you have a bug report or feature request, please join the discord! \n 
+    https://discord.gg/ZxgqU6MhTT \n\n 
+    
+    You can also email \n 
+    kbeanstudios@gmail.com")
 
     # Send the text to the Discord Channel
     if format_preference.lower() == 'plain':
@@ -708,7 +712,12 @@ async def info_command(ctx: discord.Interaction):
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
     # Provide a brief description of the bot
-    description = "A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: \n https://kbeanstudios.ca/discordweatherbot. \n You can also run /help\n \n If you want to contribute to the project, have ideas, or need support, join the discord! \n https://discord.gg/ZxgqU6MhTT \n \n **Version:** 4.5.1"
+    description = (f"A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: \n 
+    https://kbeanstudios.ca/discordweatherbot. \n 
+    You can also run /help (It's probably more updated anyway :P) \n \n 
+    If you want to contribute to the project, have ideas, or need support, join the discord! \n 
+    https://discord.gg/ZxgqU6MhTT \n \n 
+    **Version:** 4.5.3")
 
     # Send the bot information to the Discord channel
     if format_preference.lower() == 'plain':
