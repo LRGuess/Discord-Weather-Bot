@@ -219,167 +219,6 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
     else:
         await ctx.followup.send(f"Unable to fetch weather data for {location}. Please check the location and try again.")
 
-# Command to set a default location
-@bot.tree.command(name="setlocation", description="Set a default location for weather updates")
-async def set_location(ctx: discord.Interaction, *, location: str):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    if user_id not in data:
-        data[user_id] = {}
-
-    data[user_id]['location'] = location
-    write_data(data)
-
-    format_preference = data[user_id].get('format', 'embed')
-
-    if format_preference.lower() == 'plain':
-        await ctx.followup.send(f'Default location set to {location}')
-    else:
-        embed = discord.Embed(title="Setting location", description=f'Default location set to {location}')
-        await ctx.followup.send(embed=embed)
-
-# Command to set a default temperature unit
-@bot.tree.command(name="setunit", description="Set a default temperature unit (C or F)")
-async def set_unit(ctx: discord.Interaction, unit: str):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    format_preference = data[user_id].get('format', 'embed')
-    unit = unit.upper()
-
-    if user_id not in data:
-        data[user_id] = {}
-
-    if unit in ['C', 'F']:
-        data[user_id]['unit'] = unit
-        write_data(data)
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'Default temperature unit set to {unit}.')
-        else:
-            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to {unit}.')
-            await ctx.followup.send(embed=embed)
-            
-    elif unit == "🦅":
-
-        data[user_id]['unit'] = 'F'
-        write_data(data)
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'Default temperature unit set to Freedom Units.')
-        else:
-            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
-            await ctx.followup.send(embed=embed)
-
-    elif unit.lower() == "freedom" :
-
-        data[user_id]['unit'] = 'F'
-        write_data(data)
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'Default temperature unit set to Freedom Units.')
-        else:
-            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
-            await ctx.followup.send(embed=embed)
-
-    elif unit.lower() == "logical" :
-
-        data[user_id]['unit'] = 'C'
-        write_data(data)
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'Default temperature unit set to Logical.')
-        else:
-            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Logical.')
-            await ctx.followup.send(embed=embed)
-
-    else:
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send('Invalid unit. Please use C or F.')
-        else:
-            embed = discord.Embed(title='Unit invalid', description='Invalid unit. Please use C or F.')
-            await ctx.followup.send(embed=embed)
-
-# Command to get the wind information
-@bot.tree.command(name="wind", description="Get the wind information for a location")
-async def get_wind(ctx: discord.Interaction, *, location: str = None):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    user_data = data.get(user_id, {})
-    format_preference = user_data.get('format', 'embed')
-
-    if location is None:
-        location = user_data.get('location')
-
-        if not location:
-            if format_preference.lower() == 'plain':
-                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
-            else:
-                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
-                await ctx.followup.send(embed=embed)
-            return
-
-    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
-    response = requests.get(weather_api_url)
-    weather_data = response.json()
-
-    if response.status_code == 200:
-        wind_speed = weather_data['wind']['speed']
-        wind_direction = weather_data['wind']['deg']
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
-        else:
-            embed = discord.Embed(title="Wind", description=f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
-            await ctx.followup.send(embed=embed)
-    else:
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
-        else:
-            embed = discord.Embed(title="Error", description=f"Unable to fetch wind information for {location}. Please check the location and try again.")
-            await ctx.followup.send(embed=embed)
-
-# Command to get the humidity information
-@bot.tree.command(name="humidity", description="Get the humidity information for a location")
-async def get_humidity(ctx: discord.Interaction, *, location: str = None):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    user_data = data.get(user_id, {})
-    format_preference = user_data.get('format', 'embed')
-
-    if location is None:
-        location = user_data.get('location')
-
-        if not location:
-            if format_preference.lower() == 'plain':
-                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
-            else:
-                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
-                await ctx.followup.send(embed=embed)
-            return
-
-    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
-    response = requests.get(weather_api_url)
-    weather_data = response.json()
-
-    if response.status_code == 200:
-        humidity = weather_data['main']['humidity']
-
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'The humidity in {location} is {humidity}%.')
-        else:
-            embed = discord.Embed(title="Humidity", description=f'The humidity in {location} is {humidity}%.')
-            await ctx.followup.send(embed=embed)
-    else:
-        if format_preference.lower() == 'plain':
-            await ctx.followup.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
-        else:
-            embed = discord.Embed(title="Error", description=f"Unable to fetch humidity information for {location}. Please check the location and try again.")
-            await ctx.followup.send(embed=embed)
-
 # Command to get the weather forecast, this is 5 days every 3 hours
 @bot.tree.command(name="forecast", description="Get the weather forecast for a location")
 async def get_forecast(ctx: discord.Interaction, *, location: str = None):
@@ -435,7 +274,6 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
 
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f)
-
 
 # Command to get a 16-day forecast
 @bot.tree.command(name="16dayforecast", description="Get a 16-day forecast without ")
@@ -602,7 +440,150 @@ async def get_air_quality(ctx: discord.Interaction, *, location: str = None, det
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f)
 
+# Command to get the wind information
+@bot.tree.command(name="wind", description="Get the wind information for a location")
+async def get_wind(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = user_data.get('location')
+
+        if not location:
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)
+            return
+
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    if response.status_code == 200:
+        wind_speed = weather_data['wind']['speed']
+        wind_direction = weather_data['wind']['deg']
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+        else:
+            embed = discord.Embed(title="Wind", description=f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
+            await ctx.followup.send(embed=embed)
+    else:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
+        else:
+            embed = discord.Embed(title="Error", description=f"Unable to fetch wind information for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed)
+
+# Command to get the humidity information
+@bot.tree.command(name="humidity", description="Get the humidity information for a location")
+async def get_humidity(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = user_data.get('location')
+
+        if not location:
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)
+            return
+
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    if response.status_code == 200:
+        humidity = weather_data['main']['humidity']
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'The humidity in {location} is {humidity}%.')
+        else:
+            embed = discord.Embed(title="Humidity", description=f'The humidity in {location} is {humidity}%.')
+            await ctx.followup.send(embed=embed)
+    else:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
+        else:
+            embed = discord.Embed(title="Error", description=f"Unable to fetch humidity information for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed)
     
+@bot.tree.command(name="suntimes", description="Find out the sunrise and sunset times for a particular location")
+async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = user_data.get('location')
+
+        if not location:
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            else:
+                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send(embed=embed)
+            return
+
+    # Call OpenWeatherMap API
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    # Check if the API request was successful
+    if response.status_code == 200:
+        # Extract sunrise and sunset times
+        sunrise_timestamp = weather_data['sys']['sunrise']
+        sunset_timestamp = weather_data['sys']['sunset']
+
+        # Convert timestamps to timezone-aware datetime objects
+        timezone_offset = weather_data['timezone']
+        sunrise_time_utc = datetime.datetime.fromtimestamp(sunrise_timestamp, tz=pytz.utc)
+        sunrise_time_local = sunrise_time_utc.astimezone(pytz.timezone(f'Etc/GMT{timezone_offset//3600}'))
+        sunset_time_utc = datetime.datetime.fromtimestamp(sunset_timestamp, tz=pytz.utc)
+        sunset_time_local = sunset_time_utc.astimezone(pytz.timezone(f'Etc/GMT{timezone_offset//3600}'))
+
+        # Convert datetime objects to Unix timestamps
+        sunrise_timestamp = sunrise_time_local.timestamp()
+        sunset_timestamp = sunset_time_local.timestamp()
+
+        # Format timestamps as Discord timestamps
+        formatted_sunrise_time = f'<t:{int(sunrise_timestamp)}:R>'
+        formatted_sunset_time = f'<t:{int(sunset_timestamp)}:R>'
+
+
+        # Send the sunrise and sunset times with Discord timestamps to the Discord channel
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
+        else:
+            #send as embed
+            embed = discord.Embed(title="Sun times", description=f'The sunrise in {location} is {formatted_sunrise_time}, and the sunset is {formatted_sunset_time}.')
+            await ctx.followup.send(embed=embed)    
+    else:
+        await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+        if format_preference.lower() == 'plain':
+            #send message as a plain text
+            await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+        else:
+            #send as embed
+            embed = discord.Embed(title="Sun times error", description=f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+            await ctx.followup.send(embed=embed)  
+
+
 # Command to get weather alerts for a location
 @bot.tree.command(name="alerts", description="Get weather alerts for a location")
 async def get_alerts(ctx: discord.Interaction, *, location: str = None):    
@@ -665,6 +646,143 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f)
 
+# Command to set a daily update time with timezone and AM/PM option
+@bot.tree.command(name="dailyupdate", description="Set a specific time for daily weather updates, choose AM/PM, and select a timezone")
+async def set_daily_update(ctx: discord.Interaction, time: str, am_pm: str, timezone: str):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+
+    # Parse the time in 12-hour format with AM/PM
+    try:
+        time_string = f'{time} {am_pm.upper()}'
+        update_time = datetime.datetime.strptime(time_string, '%I:%M %p').time()
+    except ValueError:
+        await ctx.followup.send('Invalid time format. Please use HH:MM and AM/PM.')
+        return
+
+    # Validate the selected timezone
+    if timezone not in all_timezones:
+        await ctx.followup.send(f'Invalid timezone. Please select a valid timezone.')
+        return
+
+    # Save the update time, AM/PM option, and timezone
+    user_data['daily_update_time'] = update_time.strftime('%H:%M')
+    user_data['timezone'] = timezone
+    user_data['am_pm'] = am_pm.upper()
+    data[user_id] = user_data
+    write_data(data)
+
+    await ctx.followup.send(f'Daily weather update time set to {time} {am_pm.upper()} in {timezone}.')
+
+# Autocomplete function for timezones
+@set_daily_update.autocomplete('timezone')
+async def timezone_autocomplete(interaction: discord.Interaction, current: str):
+    # Provide a list of timezones that match the user's input globally
+    matching_timezones = [tz for tz in all_timezones if tz.lower().startswith(current.lower())]
+    # Return up to 25 matching timezones globally
+    return [discord.app_commands.Choice(name=tz, value=tz) for tz in matching_timezones[:25]]
+
+# Command to turn off daily updates
+@bot.tree.command(name="disableupdates", description="Turn off daily weather updates")
+async def disable_daily_update(ctx: discord.Interaction):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+
+    if 'daily_update_time' in user_data:
+        del user_data['daily_update_time']
+        del user_data['timezone']
+        data[user_id] = user_data
+        write_data(data)
+        await ctx.followup.send('Daily weather updates have been turned off.')
+    else:
+        await ctx.followup.send('No daily update is set.')
+
+# Command to set a default location
+@bot.tree.command(name="setlocation", description="Set a default location for weather updates")
+async def set_location(ctx: discord.Interaction, *, location: str):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    if user_id not in data:
+        data[user_id] = {}
+
+    data[user_id]['location'] = location
+    write_data(data)
+
+    format_preference = data[user_id].get('format', 'embed')
+
+    if format_preference.lower() == 'plain':
+        await ctx.followup.send(f'Default location set to {location}')
+    else:
+        embed = discord.Embed(title="Setting location", description=f'Default location set to {location}')
+        await ctx.followup.send(embed=embed)
+
+# Command to set a default temperature unit
+@bot.tree.command(name="setunit", description="Set a default temperature unit (C or F)")
+async def set_unit(ctx: discord.Interaction, unit: str):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    format_preference = data[user_id].get('format', 'embed')
+    unit = unit.upper()
+
+    if user_id not in data:
+        data[user_id] = {}
+
+    if unit in ['C', 'F']:
+        data[user_id]['unit'] = unit
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to {unit}.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to {unit}.')
+            await ctx.followup.send(embed=embed)
+            
+    elif unit == "🦅":
+
+        data[user_id]['unit'] = 'F'
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to Freedom Units.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
+            await ctx.followup.send(embed=embed)
+
+    elif unit.lower() == "freedom" :
+
+        data[user_id]['unit'] = 'F'
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to Freedom Units.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Freedom Units.')
+            await ctx.followup.send(embed=embed)
+
+    elif unit.lower() == "logical" :
+
+        data[user_id]['unit'] = 'C'
+        write_data(data)
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Default temperature unit set to Logical.')
+        else:
+            embed = discord.Embed(title='Unit set', description=f'Default temperature unit set to Logical.')
+            await ctx.followup.send(embed=embed)
+
+    else:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send('Invalid unit. Please use C or F.')
+        else:
+            embed = discord.Embed(title='Unit invalid', description='Invalid unit. Please use C or F.')
+            await ctx.followup.send(embed=embed)
+
 # Command to set message format preference
 @bot.tree.command(name="format", description="Choose message format (embed/plain)")
 async def format_message(ctx: discord.Interaction, message_format: str):
@@ -682,28 +800,6 @@ async def format_message(ctx: discord.Interaction, message_format: str):
         await ctx.followup.send(f'Message format preference set to {message_format.lower()}.')
     else:
         await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
-@bot.tree.command(name="bugreport", description="Submit a bug report or feature request!")
-async def bug_report(ctx: discord.Interaction):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    user_data = data.get(user_id, {})
-    format_preference = user_data.get('format', 'embed')
-    # Bug report text
-    description = (
-    f"""If you have a bug report or feature request, please join the discord!
-    [K-Bean Studios Server](https://discord.gg/ZxgqU6MhTT)
-    
-    You can also email us at
-    kbeanstudios@gmail.com
-    But for everyone's simplicity just join the discord""")
-
-    # Send the text to the Discord Channel
-    if format_preference.lower() == 'plain':
-        await ctx.followup.send(description)
-    else:
-        embed = discord.Embed(title="Bug/Feature Report", description=description, color=0x66b4ff)
-        await ctx.followup.send(embed=embed)
 
 # Command to get information about the weather bot
 @bot.tree.command(name="about", description="Get information about the weather bot")
@@ -728,6 +824,30 @@ async def info_command(ctx: discord.Interaction):
     else:
         embed = discord.Embed(title="About", description=description, color=0x66b4ff)
         await ctx.followup.send(embed=embed)
+
+@bot.tree.command(name="bugreport", description="Submit a bug report or feature request!")
+async def bug_report(ctx: discord.Interaction):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+    # Bug report text
+    description = (
+    f"""If you have a bug report or feature request, please join the discord!
+    [K-Bean Studios Server](https://discord.gg/ZxgqU6MhTT)
+    
+    You can also email us at
+    kbeanstudios@gmail.com
+    But for everyone's simplicity just join the discord""")
+
+    # Send the text to the Discord Channel
+    if format_preference.lower() == 'plain':
+        await ctx.followup.send(description)
+    else:
+        embed = discord.Embed(title="Bug/Feature Report", description=description, color=0x66b4ff)
+        await ctx.followup.send(embed=embed)
+
 
 # Command to get a full list of commands
 @bot.tree.command(name="help", description="Full list of commands")
@@ -815,61 +935,6 @@ async def update_bot(ctx: discord.Interaction):
             await ctx.channel.send("Data = \{\}")
     else:
         await ctx.followup.send("You are not authorized to use this command.")
-        
-# Command to set a daily update time with timezone and AM/PM option
-@bot.tree.command(name="dailyupdate", description="Set a specific time for daily weather updates, choose AM/PM, and select a timezone")
-async def set_daily_update(ctx: discord.Interaction, time: str, am_pm: str, timezone: str):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    user_data = data.get(user_id, {})
-
-    # Parse the time in 12-hour format with AM/PM
-    try:
-        time_string = f'{time} {am_pm.upper()}'
-        update_time = datetime.datetime.strptime(time_string, '%I:%M %p').time()
-    except ValueError:
-        await ctx.followup.send('Invalid time format. Please use HH:MM and AM/PM.')
-        return
-
-    # Validate the selected timezone
-    if timezone not in all_timezones:
-        await ctx.followup.send(f'Invalid timezone. Please select a valid timezone.')
-        return
-
-    # Save the update time, AM/PM option, and timezone
-    user_data['daily_update_time'] = update_time.strftime('%H:%M')
-    user_data['timezone'] = timezone
-    user_data['am_pm'] = am_pm.upper()
-    data[user_id] = user_data
-    write_data(data)
-
-    await ctx.followup.send(f'Daily weather update time set to {time} {am_pm.upper()} in {timezone}.')
-
-# Autocomplete function for timezones
-@set_daily_update.autocomplete('timezone')
-async def timezone_autocomplete(interaction: discord.Interaction, current: str):
-    # Provide a list of timezones that match the user's input globally
-    matching_timezones = [tz for tz in all_timezones if tz.lower().startswith(current.lower())]
-    # Return up to 25 matching timezones globally
-    return [discord.app_commands.Choice(name=tz, value=tz) for tz in matching_timezones[:25]]
-
-# Command to turn off daily updates
-@bot.tree.command(name="disableupdates", description="Turn off daily weather updates")
-async def disable_daily_update(ctx: discord.Interaction):
-    await ctx.response.defer()
-
-    user_id = str(ctx.user.id)
-    user_data = data.get(user_id, {})
-
-    if 'daily_update_time' in user_data:
-        del user_data['daily_update_time']
-        del user_data['timezone']
-        data[user_id] = user_data
-        write_data(data)
-        await ctx.followup.send('Daily weather updates have been turned off.')
-    else:
-        await ctx.followup.send('No daily update is set.')
 
 @tasks.loop(seconds=45)
 async def send_daily_updates():
