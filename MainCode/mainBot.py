@@ -438,7 +438,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
 
 
 # Command to get a 16-day forecast
-@bot.tree.command(name="16dayforecast", description="Get a 16-day faorcast without ")
+@bot.tree.command(name="16dayforecast", description="Get a 16-day forecast without ")
 async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         await ctx.response.defer()
 
@@ -517,7 +517,7 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
             json.dump(data, f)
 
 # Command to get air quality for a location
-@bot.tree.command(name="airquality", description="Get the air quatity for a location")
+@bot.tree.command(name="airquality", description="Get the air quality for a location")
 async def get_air_quality(ctx: discord.Interaction, *, location: str = None, details: bool = False):
     await ctx.response.defer()
 
@@ -735,7 +735,7 @@ async def help_command(ctx:discord.Interaction):
         await ctx.followup.send(embed=embed)
 
 # Command to send a smiley face
-@bot.tree.command(name="smiley", description="Send a smiley face haha")
+@bot.tree.command(name="smiley", description="Send a smiley face heehee")
 async def smiley_command(ctx:discord.Interaction):
     await ctx.response.defer()
 
@@ -755,7 +755,7 @@ async def update_bot(ctx: discord.Interaction):
         except FileNotFoundError:
             await ctx.followup.send("JSON file not found.")
         except json.JSONDecodeError:
-            await ctx.followup.send("Error decoding JSON... Creating empty dictionairy")
+            await ctx.followup.send("Error decoding JSON... Creating empty dictionary")
             data = {}
             await ctx.channel.send("Data = \{\}")
     else:
