@@ -690,17 +690,19 @@ async def bug_report(ctx: discord.Interaction):
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
     # Bug report text
-    description = (f"If you have a bug report or feature request, please join the discord! \n 
-    https://discord.gg/ZxgqU6MhTT \n\n 
+    description = (
+    f"""If you have a bug report or feature request, please join the discord!
+    [K-Bean Studios Server](https://discord.gg/ZxgqU6MhTT)
     
-    You can also email \n 
-    kbeanstudios@gmail.com")
+    You can also email us at
+    kbeanstudios@gmail.com
+    But for everyone's simplicity just join the discord""")
 
     # Send the text to the Discord Channel
     if format_preference.lower() == 'plain':
         await ctx.followup.send(description)
     else:
-        embed = discord.Embed(title="Bug/Feature Report", description=description)
+        embed = discord.Embed(title="Bug/Feature Report", description=description, color=0x66b4ff)
         await ctx.followup.send(embed=embed)
 
 # Command to get information about the weather bot
@@ -712,18 +714,19 @@ async def info_command(ctx: discord.Interaction):
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
     # Provide a brief description of the bot
-    description = (f"A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: \n 
-    https://kbeanstudios.ca/discordweatherbot. \n 
-    You can also run /help (It's probably more updated anyway :P) \n \n 
-    If you want to contribute to the project, have ideas, or need support, join the discord! \n 
-    https://discord.gg/ZxgqU6MhTT \n \n 
-    **Version:** 4.5.3")
+    description = (
+    f"""A cool bot that can tell you the weather, forecast, wind, and more! Website and full list of commands here: \n 
+    [Weatherbot Website](https://kbeanstudios.ca/discordweatherbot)
+    You can also run /help (It's probably more updated anyway :P) \n
+    If you want to contribute to the project, have ideas, or need support, join the discord!
+    [K-Bean Studios Server](https://discord.gg/ZxgqU6MhTT) \n
+    **Version:** 4.5.3""")
 
     # Send the bot information to the Discord channel
     if format_preference.lower() == 'plain':
         await ctx.followup.send(description)
     else:
-        embed = discord.Embed(title="About", description=description)
+        embed = discord.Embed(title="About", description=description, color=0x66b4ff)
         await ctx.followup.send(embed=embed)
 
 # Command to get a full list of commands
@@ -735,12 +738,55 @@ async def help_command(ctx:discord.Interaction):
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
 
-    commandlist = "**/weather** [location] provides weather for specified location 🌥\n \n **/forecast** [location] Retrieve a 5-day 3-hour weather forecast for the specified location 📰 \n \n **/16dayforecast** [location] Retrieve a 16-day weather forecast for the specified location 📃 \n \n **/setlocation** [location] Set your default location for weather updates 📍 \n \n **/setunit** [F or C] Choose between Celsius and FreedomUnits for temperature units 🍁 or 🦅 \n \n **/dailyupdate** [time] Receive a daily weather update at the specified time ⏰ \n \n **/wind** [location] Get detailed information about the wind conditions at a specific location 💨 \n \n **/humidity** [location] Check the current humidity level for a given location 💧 \n \n **/suntimes**[location] Find out the sunrise and sunset times for a particular location 🌞 \n \n **/alerts** [location] Receive any weather alerts or warnings for the specified location :bangbang: \n \n **/format** [embed/plain] Choose between an embedded or plain text format for weather responses 📜 \n \n **/weatherbotabout** Get information about WeatherBot, including version and support details ❓\n \n**/bugreport** Submit a bug report or feature request 🐛 \n \n If you need more support, or want to contribute, join the discord! \n https://discord.gg/ZxgqU6MhTT"
+    commandlist = (
+    f"""Note that all [location] parameters are optional, and will default to your set location if you have one. Use /setlocation to set your default location.
+    **----------------------------------------**
+    Weather commands:
+    
+    **/weather** [location] provides weather for specified location 🌥
+    ```/weather Calgary```
+    **/forecast** [location] Retrieve a 5-day 3-hour weather forecast for the specified location 📰
+    ```/forecast Calgary```
+    **/16dayforecast** [location] Retrieve a 16-day weather forecast for the specified location 📃
+    ```/16dayforecast Calgary```
+    **/airquality** [location] Get the air quality index for a specific location 🌬
+    ```/airquality Calgary```
+    **/wind** [location] Get detailed information about the wind conditions at a specific location 💨
+    ```/wind Calgary```
+    **/humidity** [location] Check the current humidity level for a given location 💧
+    ```/humidity Calgary```
+    **/suntimes**[location] Find out the sunrise and sunset times for a particular location 🌞
+    ```/suntimes Calgary```
+    **/alerts** [location] Receive any weather alerts or warnings for the specified location :bangbang:
+    ```/alerts Calgary```
+    **----------------------------------------**
+    Daily update commands:
+    
+    **/dailyupdate** [time] [am_pm] [timezone] Receive a daily weather update at the specified time ⏰
+    ```/dailyupdate 8:00 AM America/Edmonton```
+    **/disableupdates** Turn off daily weather updates 🚫
+    ```/disableupdates```
+    **----------------------------------------**
+    Other commands:
+    
+    **/setlocation** [location] Set your default location for weather updates 📍
+    This will replace [location] in all weather-related commands, unless you specify a location in the command.
+    ```/setlocation Calgary```
+    **/setunit** [F or C] Choose between Celsius and FreedomUnits for temperature units 🍁 or 🦅
+    ```/setunit F``` or ```/setunit C```
+    **/format** [embed/plain] Choose between an embedded or plain text format for weather responses 📜
+    ```/format embed``` or ```/format plain```
+    **/about** Get information about WeatherBot, including version and support details ❓
+    ```/about```
+    **/bugreport** Submit a bug report or feature request 🐛
+    ```/bugreport```
+    You can also just join the discord server for more information and support! 🌐
+    [K-Bean Studios Discord](https://discord.gg/ZxgqU6MhTT)""")
 
     if format_preference.lower() == 'plain':
         await ctx.followup.send(commandlist)
     else:
-        embed = discord.Embed(title="Command list", description=commandlist)
+        embed = discord.Embed(title="Command list", description=commandlist, color=0x66b4ff)
         await ctx.followup.send(embed=embed)
 
 # Command to send a smiley face
