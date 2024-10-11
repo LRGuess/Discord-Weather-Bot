@@ -215,9 +215,9 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
 
     if location is None:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+            await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
         else:
-            embed = discord.Embed(title='Error', description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+            embed = discord.Embed(title='Error: 201', description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
             await ctx.followup.send(embed=embed)
         return
 
@@ -242,9 +242,9 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
     else:
         error_message = f"Unable to fetch weather for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(error_message)
+            await ctx.followup.send("Error: 101 - " + error_message)
         else:
-            embed = discord.Embed(title="Forecast error", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 101", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
 # Command to get the weather forecast, this is 5 days every 3 hours
@@ -261,9 +261,9 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
         if location is None:
             error_message = "Please provide a location or set a default location using /setlocation."
             if format_preference.lower() == 'plain':
-                await ctx.followup.send(error_message)
+                await ctx.followup.send("Error: 201 - " + error_message)
             else:
-                embed = discord.Embed(title="Location error", description=error_message, color=0xFF0000)
+                embed = discord.Embed(title="Error: 201", description=error_message, color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
 
@@ -275,9 +275,9 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     if geocoding_response.status_code != 200 or not geocoding_data:
         error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(error_message)
+            await ctx.followup.send("Error: 202 - " + error_message)
         else:
-            embed = discord.Embed(title="Geocoding error", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 202", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
         return
 
@@ -295,9 +295,9 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     else:
         error_message = f"Unable to fetch weather forecast for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(error_message)
+            await ctx.followup.send("Error: 102 - " + error_message)
         else:
-            embed = discord.Embed(title="Forecast error", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 102", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
     with open(DATA_FILE, 'w') as f:
@@ -320,9 +320,9 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
             if location is None:
                 error_message = "Please provide a location or set a default location using /setlocation."
                 if format_preference.lower() == 'plain':
-                    await ctx.followup.send(error_message)
+                    await ctx.followup.send("Error: 201 - " + error_message)
                 else:
-                    embed = discord.Embed(title="Location error", description=error_message, color=0xFF0000)
+                    embed = discord.Embed(title="Error: 201", description=error_message, color=0xFF0000)
                     await ctx.followup.send(embed=embed)
                 return
 
@@ -334,9 +334,9 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         if geocoding_response.status_code != 200 or not geocoding_data:
             error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
             if format_preference.lower() == 'plain':
-                await ctx.followup.send(error_message)
+                await ctx.followup.send("Error: 202 - " + error_message)
             else:
-                embed = discord.Embed(title="Geocoding error", description=error_message, color=0xFF0000)
+                embed = discord.Embed(title="Error: 202 ", description=error_message, color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
 
@@ -373,9 +373,9 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         else:
             error_message = f"Unable to fetch weather forecast for {location}. Please check the location and try again."
             if format_preference.lower() == 'plain':
-                await ctx.followup.send(error_message)
+                await ctx.followup.send("Error: 103 - " + error_message)
             else:
-                embed = discord.Embed(title="Forecast error", description=error_message, color=0xFF0000)
+                embed = discord.Embed(title="Error: 103", description=error_message, color=0xFF0000)
                 await ctx.followup.send(embed=embed)
 
         # Save the user data to the file
@@ -396,9 +396,9 @@ async def get_air_quality(ctx: discord.Interaction, *, location: str = None, det
         if location is None:
             error_message = "Please provide a location or set a default location using /setlocation."
             if format_preference.lower() == 'plain':
-                await ctx.followup.send(error_message)
+                await ctx.followup.send("Error: 201 - " + error_message)
             else:
-                embed = discord.Embed(title="Location error", description=error_message, color=0xFF0000)
+                embed = discord.Embed(title="Error: 201", description=error_message, color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
     
@@ -410,9 +410,9 @@ async def get_air_quality(ctx: discord.Interaction, *, location: str = None, det
     if geocoding_response.status_code != 200 or not geocoding_data:
         error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(error_message)
+            await ctx.followup.send("Error: 202 - " + error_message)
         else:
-            embed = discord.Embed(title="Geocoding error", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 202", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
         return
 
@@ -459,9 +459,9 @@ async def get_air_quality(ctx: discord.Interaction, *, location: str = None, det
     else:
         error_message = f"Unable to fetch air quality for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(error_message)
+            await ctx.followup.send("Error: 104 - " + error_message)
         else:
-            embed = discord.Embed(title="Forecast error", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 104", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
@@ -482,9 +482,9 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
 
         if not location:
             if format_preference.lower() == 'plain':
-                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
             else:
-                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+                embed = discord.Embed(title="Error: 201", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
 
@@ -503,9 +503,9 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(f"Unable to fetch wind information for {location}. Please check the location and try again.")
+            await ctx.followup.send(f" Error: 105 - Unable to fetch wind information for {location}. Please check the location and try again.")
         else:
-            embed = discord.Embed(title="Error", description=f"Unable to fetch wind information for {location}. Please check the location and try again.", color=0xFF0000)
+            embed = discord.Embed(title="Error: 105", description=f"Unable to fetch wind information for {location}. Please check the location and try again.", color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
 # Command to get the humidity information
@@ -522,9 +522,9 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
 
         if not location:
             if format_preference.lower() == 'plain':
-                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
             else:
-                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+                embed = discord.Embed(title="Error: 201", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
 
@@ -542,9 +542,9 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(f"Unable to fetch humidity information for {location}. Please check the location and try again.")
+            await ctx.followup.send(f"Error: 106 - Unable to fetch humidity information for {location}. Please check the location and try again.")
         else:
-            embed = discord.Embed(title="Error", description=f"Unable to fetch humidity information for {location}. Please check the location and try again.", color=0xFF0000)
+            embed = discord.Embed(title="Error: 106", description=f"Unable to fetch humidity information for {location}. Please check the location and try again.", color=0xFF0000)
             await ctx.followup.send(embed=embed)
     
 @bot.tree.command(name="suntimes", description="Find out the sunrise and sunset times for a particular location")
@@ -560,9 +560,9 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
 
         if not location:
             if format_preference.lower() == 'plain':
-                await ctx.followup.send("Please provide a location or set a default location using /setlocation.")
+                await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
             else:
-                embed = discord.Embed(title="Location error", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+                embed = discord.Embed(title="Error: 201", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
 
@@ -602,13 +602,12 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
             embed = discord.Embed(title="Sun times", description=f'The sunrise in {location} is {formatted_sunrise_time}, and the sunset is {formatted_sunset_time}.', color=0xf7a751)
             await ctx.followup.send(embed=embed)    
     else:
-        await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
         if format_preference.lower() == 'plain':
             #send message as a plain text
-            await ctx.followup.send(f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
+            await ctx.followup.send(f"Error: 107 - Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.")
         else:
             #send as embed
-            embed = discord.Embed(title="Sun times error", description=f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.", color=0xFF0000)
+            embed = discord.Embed(title="Error: 107", description=f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.", color=0xFF0000)
             await ctx.followup.send(embed=embed)  
 
 
@@ -626,9 +625,9 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
         if location is None:
             error_message = "Please provide a location or set a default location using /setlocation."
             if format_preference.lower() == 'plain':
-                await ctx.followup.send(error_message)
+                await ctx.followup.send("Error: 201 - " + error_message)
             else:
-                embed = discord.Embed(title="Location error", description=error_message, color=0xFF0000)
+                embed = discord.Embed(title="Error: 201", description=error_message, color=0xFF0000)
                 await ctx.followup.send(embed=embed)
             return
 
@@ -665,9 +664,9 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
     else:
         error_message = f"Unable to fetch weather alerts for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(error_message)
+            await ctx.followup.send("Error: 108 - " + error_message)
         else:
-            embed = discord.Embed(title="Alert Error", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 108", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
@@ -689,18 +688,18 @@ async def set_daily_update(ctx: discord.Interaction, time: str, am_pm: str, time
         update_time = datetime.datetime.strptime(time_string, '%I:%M %p').time()
     except ValueError:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send('Invalid time format. Please use HH:MM and AM/PM.')
+            await ctx.followup.send('Error: 203 - Invalid time format. Please use HH:MM and AM/PM.')
         else:
-            embed = discord.Embed(title="Invalid Format", description="Invalid time format. Please use HH:MM and AM/PM.", color=0xFF0000)
+            embed = discord.Embed(title="Error: 203", description="Invalid time format. Please use HH:MM and AM/PM.", color=0xFF0000)
             await ctx.followup.send(embed=embed)
         return
 
     # Validate the selected timezone
     if timezone not in all_timezones:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("Invalid timezone. Please select a valid timezone.")
+            await ctx.followup.send("Error: 204 - Invalid timezone. Please select a valid timezone.")
         else:
-            embed = discord.Embed(title="Location error", description="Invalid timezone. Please select a valid timezone.", color=0xFF0000)
+            embed = discord.Embed(title="Error: 204", description="Invalid timezone. Please select a valid timezone.", color=0xFF0000)
             await ctx.followup.send(embed=embed)
         return
 
@@ -742,13 +741,13 @@ async def disable_daily_update(ctx: discord.Interaction):
         if format_preference.lower() == 'plain':
             await ctx.followup.send("Daily weather updates have been turned off.")
         else:
-            embed = discord.Embed(title="Location error", description="Daily weather updates have been turned off.", color=0x51e4f7)
+            embed = discord.Embed(title="Updates off", description="Daily weather updates have been turned off.", color=0x51e4f7)
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("No daily updates are currently set.")
+            await ctx.followup.send("Error: 301 - No daily updates are currently set.")
         else:
-            embed = discord.Embed(title="Location error", description="No daily updates are currently set", color=0xd0f751)
+            embed = discord.Embed(title="Error: 301", description="No daily updates are currently set", color=0xd0f751)
             await ctx.followup.send(embed=embed)
 
 #endregion
@@ -842,9 +841,9 @@ async def set_unit(ctx: discord.Interaction, unit: str):
 
     else:
         if format_preference.lower() == 'plain':
-            await ctx.followup.send('Invalid unit. Please use C or F.')
+            await ctx.followup.send('Error: 205 - Invalid unit. Please use C or F.')
         else:
-            embed = discord.Embed(title='Unit invalid', description='Invalid unit. Please use C or F.', color=0xFF0000)
+            embed = discord.Embed(title='Error: 205', description='Invalid unit. Please use C or F.', color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
 # Command to set message format preference
@@ -863,7 +862,7 @@ async def format_message(ctx: discord.Interaction, message_format: str):
 
         await ctx.followup.send(f'Message format preference set to {message_format.lower()}.')
     else:
-        await ctx.followup.send('Invalid format. Please choose either "embed" or "plain".')
+        await ctx.followup.send('Error: 206 - Invalid format. Please choose either "embed" or "plain".')
 
 # Command to get information about the weather bot
 @bot.tree.command(name="about", description="Get information about the weather bot")
@@ -993,13 +992,13 @@ async def update_bot(ctx: discord.Interaction):
                 data = json.load(file)
                 await ctx.followup.send("Bot data updated successfully from JSON.")
         except FileNotFoundError:
-            await ctx.followup.send("JSON file not found.")
+            await ctx.followup.send("Error: 302 - JSON file not found.")
         except json.JSONDecodeError:
-            await ctx.followup.send("Error decoding JSON... Creating empty dictionary")
+            await ctx.followup.send("Error: 303 - Error decoding JSON... Creating empty dictionary")
             data = {}
-            await ctx.channel.send("Data = \{\}")
+            await ctx.channel.send("Data = {}")
     else:
-        await ctx.followup.send("You are not authorized to use this command.")
+        await ctx.followup.send("Error: 403 - You are not authorized to use this command.")
 
 #endregion
 #region Tasks
@@ -1050,13 +1049,13 @@ async def send_daily_updates():
                                     print(f"Sent update to user {user_id}")
                                     sent_updates.add(user_id)
                                 except discord.Forbidden:
-                                    print(f"Bot does not have permission to send DMs to user {user_id}")
+                                    print(f"Error: 401 - Bot does not have permission to send DMs to user {user_id}")
                             else:
-                                print(f"User {user_id} not found.")
+                                print(f"Error: 304 - User {user_id} not found.")
                         else:
-                            print(f"Unable to fetch daily weather update for {location}.")
+                            print(f"Error: 109 - Unable to fetch daily weather update for {location}.")
                     else:
-                        print(f"No location found for user {user_id}.")
+                        print(f"Error: 201 - No location found for user {user_id}.")
         except Exception as e:
             pass
 
