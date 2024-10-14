@@ -153,11 +153,10 @@ class DateSelect16(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         selected_date = self.values[0]
-        forecasts_for_date = [forecast for forecast in self.forecast_list if datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d') == selected_date]
-        
+        forecasts_for_date = [forecast for forecast in self.forecast_list if datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d') == selected_date]        
         forecast_message = f'Forecast for {selected_date}\n\n'
         for forecast in forecasts_for_date:
-            forecast_time = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%H:%M:%S')
+            forecast_time = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%H:%M:%S')
             temperature = forecast['temp']['day'] - 273.15
             description = forecast['weather'][0]['description']
             forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°C, Weather: {description}\n'
@@ -171,7 +170,7 @@ class DateSelectView(discord.ui.View):
         self.location = location
 
         # Create a unique and sorted set of dates
-        unique_dates = sorted({datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d') for forecast in forecast_list})
+        unique_dates = sorted({datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d') for forecast in forecast_list})
 
         options = [discord.SelectOption(label=date) for date in unique_dates]
         self.add_item(DateSelect(options, forecast_list, location))
@@ -184,11 +183,11 @@ class DateSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         selected_date = self.values[0]
-        forecasts_for_date = [forecast for forecast in self.forecast_list if datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d') == selected_date]
+        forecasts_for_date = [forecast for forecast in self.forecast_list if datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d') == selected_date]
         
         forecast_message = f'Forecast for {selected_date}\n\n'
         for forecast in forecasts_for_date:
-            forecast_time = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%H:%M:%S')
+            forecast_time = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%H:%M:%S')
             temperature = forecast['main']['temp'] - 273.15
             description = forecast['weather'][0]['description']
             forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°C, Weather: {description}\n'
@@ -357,7 +356,7 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
             if format_preference.lower() == 'plain':
                 forecast_message = f'16-day weather forecast for {location}:\n'
                 for forecast in forecast_list:
-                    forecast_date = datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d')
+                    forecast_date = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d')
                     temperature = forecast['temp']['day'] - 273.15
                     description = forecast['weather'][0]['description']
 
@@ -646,9 +645,9 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
             for alert in alerts:
                 event = alert['event']
                 description = alert['description']
-                start_time = datetime.datetime.utcfromtimestamp(alert['start']).strftime('%Y-%m-%d %H:%M:%S UTC')
-                end_time = datetime.datetime.utcfromtimestamp(alert['end']).strftime('%Y-%m-%d %H:%M:%S UTC')
-                alert_message += f'{event}: {description}\nStart Time: {start_time}\nEnd Time: {end_time}\n\n'
+            start_time = datetime.datetime.fromtimestamp(alert['start'], tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+            end_time = datetime.datetime.fromtimestamp(alert['end'], tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+            alert_message += f'{event}: {description}\nStart Time: {start_time}\nEnd Time: {end_time}\n\n'
 
             if format_preference.lower() == 'plain':
                 await ctx.followup.send(alert_message)
