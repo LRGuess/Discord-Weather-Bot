@@ -48,6 +48,7 @@ OPENWEATHERMAP_API_KEY = os.getenv('OPENWEATHERMAP_API_KEY')
 
 # Create an instance of Intents
 intents = discord.Intents.default()
+intents.message_content = True
 
 # Create an instance of the bot
 bot = commands.Bot(command_prefix="!", intents=intents)
