@@ -1055,7 +1055,7 @@ async def update_bot(ctx: discord.Interaction):
 
 @tasks.loop(seconds=45)
 async def send_daily_updates():
-    current_utc_time = datetime.datetime.utcnow().time()
+    current_utc_time = datetime.datetime.now(datetime.timezone.utc).time()
     current_minute = current_utc_time.minute
     for user_id, user_data in data.items():
         try:
