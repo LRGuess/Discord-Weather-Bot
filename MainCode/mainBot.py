@@ -454,7 +454,7 @@ async def get_air_quality(ctx: discord.Interaction, *, location: str = None, det
         if format_preference.lower() == 'plain':
             await ctx.followup.send(air_quality_message)
         else:
-            embed = discord.Embed(title="Air Quality", description=air_quality_message, color=0xd6c68f)
+            embed = discord.Embed(title=f"Air Quality in {location.capitalize()}", description=air_quality_message, color=0xd6c68f)
             await ctx.followup.send(embed=embed)
     else:
         error_message = f"Unable to fetch air quality for {location}. Please check the location and try again."
@@ -499,7 +499,7 @@ async def get_wind(ctx: discord.Interaction, *, location: str = None):
         if format_preference.lower() == 'plain':
             await ctx.followup.send(f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.')
         else:
-            embed = discord.Embed(title="Wind", description=f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.', color=0x8fd0d6)
+            embed = discord.Embed(title=f"Wind in {location}", description=f'The wind in {location} is blowing at {wind_speed} m/s in the direction of {wind_direction}°.', color=0x8fd0d6)
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
@@ -538,7 +538,7 @@ async def get_humidity(ctx: discord.Interaction, *, location: str = None):
         if format_preference.lower() == 'plain':
             await ctx.followup.send(f'The humidity in {location} is {humidity}%.')
         else:
-            embed = discord.Embed(title="Humidity", description=f'The humidity in {location} is {humidity}%.', color=0x7368d8)
+            embed = discord.Embed(title=f"Humidity in {location}", description=f'The humidity in {location} is {humidity}%.', color=0x7368d8)
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
@@ -599,7 +599,7 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
             await ctx.followup.send(f'The sunrise in {location} is at {formatted_sunrise_time}, and the sunset is at {formatted_sunset_time}.')
         else:
             #send as embed
-            embed = discord.Embed(title="Sun times", description=f'The sunrise in {location} is {formatted_sunrise_time}, and the sunset is {formatted_sunset_time}.', color=0xf7a751)
+            embed = discord.Embed(title=f"Sun times in {location}", description=f'The sunrise in {location} is {formatted_sunrise_time}, and the sunset is {formatted_sunset_time}.', color=0xf7a751)
             await ctx.followup.send(embed=embed)    
     else:
         if format_preference.lower() == 'plain':
@@ -653,13 +653,13 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
             if format_preference.lower() == 'plain':
                 await ctx.followup.send(alert_message)
             else:
-                embed = discord.Embed(title="Alerts", description=alert_message, color=0x59f751)
+                embed = discord.Embed(title=f"Alerts in {location}", description=alert_message, color=0x59f751)
                 await ctx.followup.send(embed=embed)
         else:
             if format_preference.lower() == 'plain':
                 await ctx.followup.send(f'No weather alerts for {location}.')
             else:
-                embed = discord.Embed(title="No Alerts", description=f'No weather alerts for {location}.', color=0xf75451)
+                embed = discord.Embed(title=f"No Alerts in {location}", description=f'No weather alerts for {location}.', color=0xf75451)
                 await ctx.followup.send(embed=embed)
     else:
         error_message = f"Unable to fetch weather alerts for {location}. Please check the location and try again."
@@ -713,7 +713,7 @@ async def set_daily_update(ctx: discord.Interaction, time: str, am_pm: str, time
     if format_preference.lower() == 'plain':
         await ctx.followup.send(f'Daily weather update time set to {time} {am_pm.upper()} in {timezone}.')
     else:
-        embed = discord.Embed(title="Daily Updates Set", description=f"Daily weather update time set to {time} {am_pm.upper()} in {timezone}.", color=0x51e4f7)
+        embed = discord.Embed(title="Daily Updates Set", description=f"Daily weather update time set for your default location at {time} {am_pm.upper()} in {timezone}.", color=0x51e4f7)
         await ctx.followup.send(embed=embed)
 
 # Autocomplete function for timezones
@@ -741,7 +741,7 @@ async def disable_daily_update(ctx: discord.Interaction):
         if format_preference.lower() == 'plain':
             await ctx.followup.send("Daily weather updates have been turned off.")
         else:
-            embed = discord.Embed(title="Updates off", description="Daily weather updates have been turned off.", color=0x51e4f7)
+            embed = discord.Embed(title="Daily Updates off", description="Daily weather updates have been turned off.", color=0x51e4f7)
             await ctx.followup.send(embed=embed)
     else:
         if format_preference.lower() == 'plain':
@@ -770,7 +770,7 @@ async def set_location(ctx: discord.Interaction, *, location: str):
     if format_preference.lower() == 'plain':
         await ctx.followup.send(f'Default location set to {location}')
     else:
-        embed = discord.Embed(title="Setting location", description=f'Default location set to {location}', color=0x86f751)
+        embed = discord.Embed(title="Location Set", description=f'Default location set to {location}', color=0x86f751)
         await ctx.followup.send(embed=embed)
 
 # Command to set a default temperature unit
@@ -860,7 +860,12 @@ async def format_message(ctx: discord.Interaction, message_format: str):
         with open('user_data.json', 'w') as f:
             json.dump(data, f)
 
-        await ctx.followup.send(f'Message format preference set to {message_format.lower()}.')
+        format_preference = data[user_id].get('format', 'embed')
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f'Message format preference set to {message_format.lower()}.')
+        else:
+            embed = discord.Embed(title='Format set', description=f'Message format preference set to {message_format.lower()}.', color=0x1384db)
+            await ctx.followup.send(embed=embed)
     else:
         await ctx.followup.send('Error: 206 - Invalid format. Please choose either "embed" or "plain".')
 
@@ -970,7 +975,7 @@ async def help_command(ctx:discord.Interaction):
     if format_preference.lower() == 'plain':
         await ctx.followup.send(commandlist)
     else:
-        embed = discord.Embed(title="Command list", description=commandlist, color=0x66b4ff)
+        embed = discord.Embed(title="Help", description=commandlist, color=0x66b4ff)
         await ctx.followup.send(embed=embed)
 
 # Command to send a smiley face
