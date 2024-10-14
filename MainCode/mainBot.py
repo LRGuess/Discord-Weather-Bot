@@ -672,6 +672,52 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
     with open(DATA_FILE, 'w') as f:
         json.dump(data, f)
 
+@bot.tree.command(name="geocode", description="Get the coordinates for a location")
+async def get_geocode(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = user_data.get('location')
+        if location is None:
+            error_message = "Please provide a location or set a default location using /setlocation."
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send("Error: 201 - " + error_message)
+            else:
+                embed = discord.Embed(title="Error: 201", description=error_message, color=0xFF0000)
+                await ctx.followup.send(embed=embed)
+            return
+    
+    # Call OpenWeatherMap Geocoding API
+    geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    geocoding_response = requests.get(geocoding_api_url)
+    geocoding_data = geocoding_response.json()
+
+    if geocoding_response.status_code != 200 or not geocoding_data:
+        error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send("Error: 202 - " + error_message)
+        else:
+            embed = discord.Embed(title="Error: 202", description=error_message, color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+        return
+
+    lat = geocoding_data[0]['lat']
+    lon = geocoding_data[0]['lon']
+
+    if format_preference.lower() == 'plain':
+        await ctx.followup.send(f"The coordinates for {location} are Latitude: {lat}, Longitude: {lon}")
+    else:
+        embed = discord.Embed(title=f"Coordinates for {location}", description=f"Latitude: {lat} \n Longitude: {lon}", color=0x2d0f54)
+        await ctx.followup.send(embed=embed)
+    return
+    
+#endregion
+#region Daily Updates
+
 # Command to set a daily update time with timezone and AM/PM option
 @bot.tree.command(name="dailyupdate", description="Set a specific time for daily weather updates, choose AM/PM, and select a timezone")
 async def set_daily_update(ctx: discord.Interaction, time: str, am_pm: str, timezone: str):
@@ -884,7 +930,7 @@ async def info_command(ctx: discord.Interaction):
     You can also run /help (It's probably more updated anyway :P) \n
     If you want to contribute to the project, have ideas, or need support, join the discord!
     [K-Bean Studios Server](https://discord.gg/ZxgqU6MhTT) \n
-    **Version:** 4.5.3""")
+    **Version:** 4.5.4""")
 
     # Send the bot information to the Discord channel
     if format_preference.lower() == 'plain':
