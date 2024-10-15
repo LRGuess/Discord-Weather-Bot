@@ -382,6 +382,72 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f)
 
+# Command to get a 30-day forecast
+@bot.tree.command(name="30dayforecast", description="Get a 30-day climatic forecast for a location")
+async def get_forecast30(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = user_data.get('location')
+        if not location:
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
+            else:
+                embed = discord.Embed(title="Error: 201", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+                await ctx.followup.send(embed=embed)
+            return
+
+    # Call OpenWeatherMap Geocoding API
+    geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    geocoding_response = requests.get(geocoding_api_url)
+    geocoding_data = geocoding_response.json()
+
+    if geocoding_response.status_code != 200 or not geocoding_data:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f"Error: 202 - Unable to fetch geocoding data for {location}.")
+        else:
+            embed = discord.Embed(title="Error: 202", description=f"Unable to fetch geocoding data for {location}.", color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+        return
+
+    lat = geocoding_data[0]['lat']
+    lon = geocoding_data[0]['lon']
+
+    forecast_api_url = f'https://pro.openweathermap.org/data/2.5/forecast/climate?lat={lat}&lon={lon}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(forecast_api_url)
+    forecast_data = response.json()
+
+    if response.status_code == 200:
+        forecast_message = f'30-Day Climatic Forecast for {location.capitalize()}\n\n'
+        for day in forecast_data['list']:
+            date = datetime.datetime.fromtimestamp(day['dt']).strftime('%Y-%m-%d')
+            temp_day = day['temp']['day']
+            temp_min = day['temp']['min']
+            temp_max = day['temp']['max']
+            weather_description = day['weather'][0]['description']
+            forecast_message += f"{date}: Day {temp_day}°C, Min {temp_min}°C, Max {temp_max}°C, {weather_description}\n"
+
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(forecast_message)
+        else:
+            embed = discord.Embed(title=f"30-Day Climatic Forecast for {location.capitalize()}", description=forecast_message, color=0x1E90FF)
+            await ctx.followup.send(embed=embed)
+    else:
+        error_message = f"Unable to fetch 30-day forecast for {location}. Please check the location and try again."
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send("Error: 203 - " + error_message)
+        else:
+            embed = discord.Embed(title="Error: 203", description=error_message, color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+
+    # Save the user data to the file
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f)
+
 # Command to get air quality for a location
 @bot.tree.command(name="airquality", description="Get the air quality for a location")
 async def get_air_quality(ctx: discord.Interaction, *, location: str = None, details: bool = False):
