@@ -387,9 +387,9 @@ async def get_weatherblob(ctx: discord.Interaction, *, location: str = None):
     else:
         error_message = f"Unable to fetch weather for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("Error: 101 - " + error_message)
+            await ctx.followup.send("Error: 110 - " + error_message)
         else:
-            embed = discord.Embed(title="Error: 101", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 110", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
 # Command to get the weather forecast, this is 5 days every 3 hours
@@ -495,9 +495,9 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
     else:
         error_message = f"Unable to fetch 16-day forecast for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("Error: 203 - " + error_message)
+            await ctx.followup.send("Error: 103 - " + error_message)
         else:
-            embed = discord.Embed(title="Error: 203", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 103", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
@@ -551,9 +551,9 @@ async def get_forecast30(ctx: discord.Interaction, *, location: str = None):
     else:
         error_message = f"Unable to fetch 30-day forecast for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("Error: 203 - " + error_message)
+            await ctx.followup.send("Error: 111 - " + error_message)
         else:
-            embed = discord.Embed(title="Error: 203", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 111", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
     # Save the user data to the file
@@ -1280,7 +1280,7 @@ async def send_daily_updates():
                                 except discord.Forbidden:
                                     print(f"Error: 401 - Bot does not have permission to send DMs to user {user_id}")
                             else:
-                                print(f"Error: 304 - User {user_id} not found.")
+                                print(f"Error: 404 - User {user_id} not found.")
                         else:
                             print(f"Error: 109 - Unable to fetch daily weather update for {location}.")
                     else:
