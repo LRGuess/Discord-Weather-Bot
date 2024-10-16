@@ -788,7 +788,6 @@ async def get_sun_times(ctx: discord.Interaction, *, location: str = None):
             embed = discord.Embed(title="Error: 107", description=f"Unable to fetch sunrise and sunset times for {location}. Please check the location and try again.", color=0xFF0000)
             await ctx.followup.send(embed=embed)  
 
-
 # Command to get weather alerts for a location
 @bot.tree.command(name="alerts", description="Get weather alerts for a location")
 async def get_alerts(ctx: discord.Interaction, *, location: str = None):    
@@ -1143,7 +1142,6 @@ async def bug_report(ctx: discord.Interaction):
         embed = discord.Embed(title="Bug/Feature Report", description=description, color=0x66b4ff)
         await ctx.followup.send(embed=embed)
 
-
 # Command to get a full list of commands
 @bot.tree.command(name="help", description="Full list of commands")
 async def help_command(ctx:discord.Interaction):
@@ -1308,8 +1306,6 @@ async def on_ready():
 async def on_disconnect():
     write_data(data)
 
-# Run the bot
-bot.run(DISCORD_TOKEN, reconnect=True)
 # Event to print a message when the bot is ready
 @bot.event
 async def on_ready():
