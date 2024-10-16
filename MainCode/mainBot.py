@@ -135,22 +135,23 @@ def convert_to_local_time(timestamp, timezone):
     return local_time.strftime('%Y-%m-%d %H:%M:%S')
 
 class DateSelectView16(discord.ui.View):
-    def __init__(self, forecast_list, location):
+    def __init__(self, forecast_list, location, unit):
         super().__init__(timeout=None)
         self.forecast_list = forecast_list
         self.location = location
+        self.unit = unit
 
         # Create a unique and sorted set of dates
-        unique_dates = sorted({datetime.datetime.utcfromtimestamp(forecast['dt']).strftime('%Y-%m-%d') for forecast in forecast_list})
-
+        unique_dates = sorted({datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d') for forecast in forecast_list})
         options = [discord.SelectOption(label=date) for date in unique_dates]
-        self.add_item(DateSelect16(options, forecast_list, location))
+        self.add_item(DateSelect16(options, forecast_list, location, unit))
 
 class DateSelect16(discord.ui.Select):
-    def __init__(self, options, forecast_list, location):
+    def __init__(self, options, forecast_list, location, unit):
         super().__init__(placeholder="Choose a date", min_values=1, max_values=1, options=options)
         self.forecast_list = forecast_list
         self.location = location
+        self.unit = unit
 
     async def callback(self, interaction: discord.Interaction):
         selected_date = self.values[0]
@@ -158,29 +159,31 @@ class DateSelect16(discord.ui.Select):
         forecast_message = f'Forecast for {selected_date}\n\n'
         for forecast in forecasts_for_date:
             forecast_time = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%H:%M:%S')
-            temperature = forecast['temp']['day'] - 273.15
+            temperature = convert_temperature(forecast['temp']['day'], self.unit)
             description = forecast['weather'][0]['description']
-            forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°C, Weather: {description}\n'
+            forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°{self.unit}, Weather: {description}\n'
 
         await interaction.response.edit_message(content=forecast_message, view=None)
 
 class DateSelectView(discord.ui.View):
-    def __init__(self, forecast_list, location):
+    def __init__(self, forecast_list, location, unit):
         super().__init__(timeout=None)
         self.forecast_list = forecast_list
         self.location = location
+        self.unit = unit
 
         # Create a unique and sorted set of dates
         unique_dates = sorted({datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d') for forecast in forecast_list})
 
         options = [discord.SelectOption(label=date) for date in unique_dates]
-        self.add_item(DateSelect(options, forecast_list, location))
+        self.add_item(DateSelect(options, forecast_list, location, unit))
 
 class DateSelect(discord.ui.Select):
-    def __init__(self, options, forecast_list, location):
+    def __init__(self, options, forecast_list, location, unit):
         super().__init__(placeholder="Choose a date", min_values=1, max_values=1, options=options)
         self.forecast_list = forecast_list
         self.location = location
+        self.unit = unit
 
     async def callback(self, interaction: discord.Interaction):
         selected_date = self.values[0]
@@ -189,43 +192,12 @@ class DateSelect(discord.ui.Select):
         forecast_message = f'Forecast for {selected_date}\n\n'
         for forecast in forecasts_for_date:
             forecast_time = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%H:%M:%S')
-            temperature = forecast['main']['temp'] - 273.15
+            temperature = convert_temperature(forecast['main']['temp'], self.unit)
             description = forecast['weather'][0]['description']
-            forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°C, Weather: {description}\n'
+            forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°{self.unit}, Weather: {description}\n'
 
         await interaction.response.edit_message(content=forecast_message, view=None)
-import os
-import json
-import datetime
-import requests
-import discord
-from discord.ext import commands
-from dotenv import load_dotenv
-import pytz
 
-# Load environment variables from .env file
-load_dotenv()
-
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-OPENWEATHERMAP_API_KEY = os.getenv('OPENWEATHERMAP_API_KEY')
-
-# Create an instance of Intents
-intents = discord.Intents.default()
-intents.message_content = True
-
-# Create an instance of the bot
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-# Define the path to the data file
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_FILE = os.path.join(BASE_DIR, '../Server/user_data.json')
-
-# Load user data
-if os.path.exists(DATA_FILE):
-    with open(DATA_FILE, 'r') as f:
-        data = json.load(f)
-else:
-    data = {}
 # Function to convert temperature from Kelvin to Celsius or Fahrenheit
 def convert_temperature(kelvin, unit):
     if unit == 'C':
@@ -276,7 +248,6 @@ class DateSelect30(discord.ui.Select):
 async def get_weather(ctx: discord.Interaction, *, location: str = None):
     await ctx.response.defer()
 
-
     user_id = str(ctx.user.id)
     user_data = data.get(user_id, {})
     default_location = user_data.get('location')
@@ -302,15 +273,12 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
         main_weather = weather_data['weather'][0]['main']
         description = weather_data['weather'][0]['description']
         temperature_main = weather_data['main']['temp']
-        temperature = temperature_main - 273.15
-
-        if default_unit == 'F':
-            temperature = (temperature_main - 273.15) * 9/5 + 32
+        temperature = convert_temperature(temperature_main, default_unit)
 
         if format_preference.lower() == 'plain':
-            await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of {temperature:.2f}°{"F" if default_unit == "F" else "C"}.')
+            await ctx.followup.send(f'The weather in {location} is {main_weather} ({description}) with a temperature of **{temperature:.2f} °{default_unit}**.')
         else:
-            embed = discord.Embed(title=f"Weather in {location}", description=f"{main_weather} ({description}) with a temperature of {temperature:.2f}°{'F' if default_unit == 'F' else 'C'}", color=0x66b4ff)
+            embed = discord.Embed(title=f"Weather in {location}", description=f"{main_weather} ({description}) with a temperature of **{temperature:.2f} °{default_unit}**", color=0x66b4ff)
             await ctx.followup.send(embed=embed)
     else:
         error_message = f"Unable to fetch weather for {location}. Please check the location and try again."
@@ -328,6 +296,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
     user_id = str(ctx.user.id)
     user_data = data.get(user_id, {})
     format_preference = user_data.get('format', 'embed')
+    unit_preference = user_data.get('unit', 'C')
 
     if location is None:
         location = user_data.get('location')
@@ -363,7 +332,7 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
 
     if response.status_code == 200:
         forecast_list = forecast_data['list']
-        view = DateSelectView(forecast_list, location)
+        view = DateSelectView(forecast_list, location, unit_preference)
         await ctx.followup.send("Select a date to view the weather forecast:", view=view)
     else:
         error_message = f"Unable to fetch weather forecast for {location}. Please check the location and try again."
@@ -387,6 +356,7 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
         
         user_data = data.get(user_id, {})
         format_preference = user_data.get('format', 'embed')
+        unit_preference = user_data.get('unit', 'C')
 
         if location is None:
             location = user_data.get('location')
@@ -431,17 +401,13 @@ async def get_forecast16(ctx: discord.Interaction, *, location: str = None):
                 forecast_message = f'16-day weather forecast for {location}:\n'
                 for forecast in forecast_list:
                     forecast_date = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d')
-                    temperature = forecast['temp']['day'] - 273.15
+                    temperature = convert_temperature(forecast['temp']['day'], unit_preference)
                     description = forecast['weather'][0]['description']
 
-                    # Convert temperature to the user's preferred unit
-                    if user_data.get('unit') == 'F':
-                        temperature = (temperature * 9/5) + 32
-
-                    forecast_message += f'{forecast_date}: Temp: {temperature:.2f}°{"F" if user_data.get("unit") == "F" else "C"}, Weather: {description}\n'
+                    forecast_message += f'{forecast_date}: Temp: {temperature:.2f}°{unit_preference}, Weather: {description}\n'
                 await ctx.followup.send(forecast_message)
             else:
-                view = DateSelectView16(forecast_list, location)
+                view = DateSelectView16(forecast_list, location, unit_preference)
                 await ctx.followup.send("Select a date to view the weather forecast:", view=view)
         else:
             error_message = f"Unable to fetch weather forecast for {location}. Please check the location and try again."
