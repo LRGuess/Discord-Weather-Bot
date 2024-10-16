@@ -803,11 +803,13 @@ async def get_geocode(ctx: discord.Interaction, *, location: str = None):
 
     lat = geocoding_data[0]['lat']
     lon = geocoding_data[0]['lon']
+    country = geocoding_data[0]['country']
+    state = geocoding_data[0]['state']
 
     if format_preference.lower() == 'plain':
-        await ctx.followup.send(f"The coordinates for {location} are Latitude: {lat}, Longitude: {lon}")
+        await ctx.followup.send(f"The coordinates for {location} are Latitude: {lat}, Longitude: {lon} in {state}, {country}.")
     else:
-        embed = discord.Embed(title=f"Coordinates for {location}", description=f"Latitude: {lat} \n Longitude: {lon}", color=0x2d0f54)
+        embed = discord.Embed(title=f"Coordinates for {location}", description=f"Latitude**:** {lat} \n Longitude**:** {lon} \n \"State\"**:** {state} \n Country**:** {country}", color=0x2d0f54)
         await ctx.followup.send(embed=embed)
     return
     
