@@ -306,6 +306,92 @@ async def get_weather(ctx: discord.Interaction, *, location: str = None):
             embed = discord.Embed(title="Error: 101", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
 
+# Command to get the weather
+@bot.tree.command(name="weatherblob", description="Get the current weather for a location")
+async def get_weatherblob(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    default_location = user_data.get('location')
+    default_unit = user_data.get('unit', 'C')
+    format_preference = user_data.get('format', 'embed')
+
+    if location is None:
+        location = default_location
+
+    if location is None:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
+        else:
+            embed = discord.Embed(title='Error: 201', description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+        return
+
+    weather_api_url = f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(weather_api_url)
+    weather_data = response.json()
+
+    if response.status_code == 200:
+        main_weather = weather_data['weather'][0]['main']
+        description = weather_data['weather'][0]['description']
+        temperature_main = weather_data['main']['temp']
+        temperature = convert_temperature(temperature_main, default_unit)
+        feels_like_main = weather_data['main']['feels_like']
+        feels_like = convert_temperature(feels_like_main, default_unit)
+        min_temp_main = weather_data['main']['temp_min']
+        min_temp = convert_temperature(min_temp_main, default_unit)
+        max_temp_main = weather_data['main']['temp_max']
+        max_temp = convert_temperature(max_temp_main, default_unit)
+        pressure = weather_data['main']['pressure']
+        ground_pressure = weather_data['main']['grnd_level']
+        humidity = weather_data['main']['humidity']
+        visibility_main = weather_data['visibility']
+        visibility = visibility_main if visibility_main < 1000 else visibility_main / 1000
+        visibility_unit = "m" if visibility_main < 1000 else "km"
+        wind_speed = weather_data['wind']['speed']
+        wind_angle = weather_data['wind']['deg']
+        clouds = weather_data['clouds']['all']
+        country_code = weather_data['sys']['country']
+        sunrise_timestamp = weather_data['sys']['sunrise']
+        sunset_timestamp = weather_data['sys']['sunset']
+        
+        sunrise = datetime.datetime.fromtimestamp(sunrise_timestamp, tz=datetime.timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
+        sunset = datetime.datetime.fromtimestamp(sunset_timestamp, tz=datetime.timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
+        
+        calculation_date = ['dt']
+        calculation_date = datetime.datetime.fromtimestamp(weather_data['dt'], tz=datetime.timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
+        embed = discord.Embed(title=f"Weatherblob for {location}", description=f"""
+        **{main_weather}** ({description}) 🌦️
+        **Temperature:** {temperature:.2f} °{default_unit} 🌡️
+        **Feels like:** {feels_like:.2f} °{default_unit} 🤔
+        **Min Temp:** {min_temp:.2f} °{default_unit} ❄️
+        **Max Temp:** {max_temp:.2f} °{default_unit} 🔥
+        -------------------------------------------------------
+        **Pressure at Sea Level:** {pressure} hPa 🌊
+        **Pressure at Ground Level:** {ground_pressure} hPa 🌍
+        **Humidity:** {humidity}% 💧
+        **Visibility:** {visibility} {visibility_unit} 👀
+        -------------------------------------------------------
+        **Wind Speed:** {wind_speed} m/s 🌬️
+        **Wind Angle:** {wind_angle}° (meteorological) 🧭
+        **Clouds:** {clouds}% ☁️
+        -------------------------------------------------------
+        **Sunrise:** {sunrise} 🌅
+        **Sunset:** {sunset} 🌇
+        -------------------------------------------------------
+        **Country Code:** {country_code} 🏳️
+        **Calculated at:** {calculation_date} ⏰
+        """, color=0x963330)
+        await ctx.followup.send(embed=embed)
+    else:
+        error_message = f"Unable to fetch weather for {location}. Please check the location and try again."
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send("Error: 101 - " + error_message)
+        else:
+            embed = discord.Embed(title="Error: 101", description=error_message, color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+
 # Command to get the weather forecast, this is 5 days every 3 hours
 @bot.tree.command(name="forecast", description="Get the weather forecast for a location")
 async def get_forecast(ctx: discord.Interaction, *, location: str = None):
