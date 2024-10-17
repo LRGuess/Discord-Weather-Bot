@@ -876,9 +876,9 @@ async def get_geocode(ctx: discord.Interaction, *, location: str = None):
     if geocoding_response.status_code != 200 or not geocoding_data:
         error_message = f"Unable to fetch coordinates for {location}. Please check the location and try again."
         if format_preference.lower() == 'plain':
-            await ctx.followup.send("Error: 202 - " + error_message)
+            await ctx.followup.send("Error: 112 - " + error_message)
         else:
-            embed = discord.Embed(title="Error: 202", description=error_message, color=0xFF0000)
+            embed = discord.Embed(title="Error: 112", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
         return
 
