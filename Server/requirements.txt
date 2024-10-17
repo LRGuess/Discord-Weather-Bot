@@ -4,4 +4,3 @@ requests==2.32.2
 Datetime==5.2
 pytz==2023.3.post1
 python-dotenv==1.0.1
-flask==3.0.3
