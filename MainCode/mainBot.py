@@ -37,13 +37,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Define the path to the data file
 DATA_FILE = os.path.join(BASE_DIR, '../Server/user_data.json')
 
-authorized_user_id = 971538245320081508
-
 # Load environment variables from .env file
 load_dotenv()
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENWEATHERMAP_API_KEY = os.getenv('OPENWEATHERMAP_API_KEY')
+authorized_user_id = os.getenv('AUTH_USER')
 
 
 # Create an instance of Intents
@@ -1130,6 +1129,8 @@ async def bug_report(ctx: discord.Interaction):
     description = (
     f"""If you have a bug report or feature request, please join the discord!
     [K-Bean Studios Server](https://discord.gg/ZxgqU6MhTT)
+
+    If this is because you have encountered an error, please check the [Wiki Error Page](https://github.com/LRGuess/Discord-Weather-Bot/wiki/Error-Codes)
     
     You can also email us at
     kbeanstudios@gmail.com
