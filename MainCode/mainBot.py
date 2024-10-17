@@ -256,6 +256,30 @@ class DateSelect30(discord.ui.Select):
         else:
             await interaction.response.edit_message(content=forecast_message, view=None)
 
+class PaginatorView(discord.ui.View):
+    def __init__(self, embeds, timeout=180):
+        super().__init__(timeout=timeout)
+        self.embeds = embeds
+        self.current_page = 0
+        self.update_buttons()
+
+    def update_buttons(self):
+        self.previous_page.disabled = self.current_page == 0
+        self.next_page.disabled = self.current_page == len(self.embeds) - 1
+
+    @discord.ui.button(label="Previous", style=discord.ButtonStyle.primary)
+    async def previous_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.update_buttons()
+            await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
+
+    @discord.ui.button(label="Next", style=discord.ButtonStyle.primary)
+    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.current_page < len(self.embeds) - 1:
+            self.current_page += 1
+            self.update_buttons()
+            await interaction.response.edit_message(embed=self.embeds[self.current_page], view=self)
 
 #endregion
 #region Weather Comms
@@ -442,6 +466,86 @@ async def get_forecast(ctx: discord.Interaction, *, location: str = None):
         else:
             embed = discord.Embed(title="Error: 203", description=error_message, color=0xFF0000)
             await ctx.followup.send(embed=embed)
+
+    # Save the user data to the file
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f)
+
+        from discord.ext import pages
+
+# Command to get an hourly forecast
+@bot.tree.command(name="hourlyforecast", description="Get an hourly forecast for a location")
+async def get_hourly_forecast(ctx: discord.Interaction, *, location: str = None):
+    await ctx.response.defer()
+
+    user_id = str(ctx.user.id)
+    user_data = data.get(user_id, {})
+    format_preference = user_data.get('format', 'embed')
+    unit_preference = user_data.get('unit', 'C')
+
+    if location is None:
+        location = user_data.get('location')
+        if not location:
+            if format_preference.lower() == 'plain':
+                await ctx.followup.send("Error: 201 - Please provide a location or set a default location using /setlocation.")
+            else:
+                embed = discord.Embed(title="Error: 201", description="Please provide a location or set a default location using /setlocation.", color=0xFF0000)
+                await ctx.followup.send(embed=embed)
+            return
+
+    # Call OpenWeatherMap Geocoding API
+    geocoding_api_url = f'http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={OPENWEATHERMAP_API_KEY}'
+    geocoding_response = requests.get(geocoding_api_url)
+    geocoding_data = geocoding_response.json()
+
+    if geocoding_response.status_code != 200 or not geocoding_data:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f"Error: 202 - Unable to fetch geocoding data for {location}.")
+        else:
+            embed = discord.Embed(title="Error: 202", description=f"Unable to fetch geocoding data for {location}.", color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+        return
+
+    lat = geocoding_data[0]['lat']
+    lon = geocoding_data[0]['lon']
+
+    # Call OpenWeatherMap Hourly Forecast API
+    forecast_api_url = f'https://pro.openweathermap.org/data/2.5/forecast/hourly?lat={lat}&lon={lon}&appid={OPENWEATHERMAP_API_KEY}'
+    response = requests.get(forecast_api_url)
+    forecast_data = response.json()
+
+    if response.status_code != 200 or not forecast_data:
+        if format_preference.lower() == 'plain':
+            await ctx.followup.send(f"Error: 113 - Unable to fetch hourly forecast for {location}.")
+        else:
+            embed = discord.Embed(title="Error: 113", description=f"Unable to fetch hourly forecast for {location}.", color=0xFF0000)
+            await ctx.followup.send(embed=embed)
+        return
+
+    # Group forecasts by day
+    forecasts_by_day = {}
+    for forecast in forecast_data['list']:
+        date = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%Y-%m-%d')
+        if date not in forecasts_by_day:
+            forecasts_by_day[date] = []
+        forecasts_by_day[date].append(forecast)
+
+    # Create embeds for each day
+    embeds = []
+    for date, forecasts in forecasts_by_day.items():
+        forecast_message = f'Hourly forecast for {date} in {location}\n\n'
+        for forecast in forecasts:
+            forecast_time = datetime.datetime.fromtimestamp(forecast['dt'], tz=datetime.timezone.utc).strftime('%H:%M:%S')
+            temperature = convert_temperature(forecast['main']['temp'], unit_preference)
+            description = forecast['weather'][0]['description']
+            forecast_message += f'{forecast_time}: Temp: {temperature:.2f}°{unit_preference}, Weather: {description}\n'
+
+        embed = discord.Embed(title=f"Hourly Forecast for {date} in {location}", description=forecast_message, color=0x6df9db)
+        embeds.append(embed)
+
+    # Use custom paginator to display the embeds
+    paginator = PaginatorView(embeds)
+    await ctx.followup.send(embed=embeds[0], view=paginator)
 
     # Save the user data to the file
     with open(DATA_FILE, 'w') as f:
@@ -851,6 +955,7 @@ async def get_alerts(ctx: discord.Interaction, *, location: str = None):
 
 @bot.tree.command(name="geocode", description="Get the coordinates for a location")
 async def get_geocode(ctx: discord.Interaction, *, location: str = None):
+
     await ctx.response.defer()
 
     user_id = str(ctx.user.id)
